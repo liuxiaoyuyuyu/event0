@@ -101,7 +101,7 @@ int main(int argv, char* argc[])
 	trackTree->Branch("par_x",&parton_x);
 	trackTree->Branch("par_y",&parton_y);
 	trackTree->Branch("par_z",&parton_z);
-	trackTree->Branch("part_t",&parton_t);
+	trackTree->Branch("par_t",&parton_t);
 
 
   	trackTree->Branch("px",&genpx);
