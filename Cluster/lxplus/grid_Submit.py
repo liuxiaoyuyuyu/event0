@@ -68,6 +68,7 @@ cd ../
 # jet finding of final hadrons
 cd fastjet_hadron
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
+ln -sf ../pythia_parton/parton_info.dat ./
 ./fastjet_hadron_trackTree {nevent} $ii
 rm -r ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat
 cd ../
