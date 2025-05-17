@@ -78,10 +78,10 @@ cd ../
 # mv fastjet_hadron/final_state_hard_hadrons.bin ./results/$ii.bin
 rm -r fastjet_hadron
 rm -r hadronization_urqmd
-#rm -r pythia_parton
+rm -r pythia_parton
 rm -r ZPC
 cd ../
-#rm -rf job-$ii
+rm -rf job-$ii
 cd ../
 done
 '''.format(fold_id_start=fold_id_start, nfold = nfold, nevent = nevent, random_number = random_number)
