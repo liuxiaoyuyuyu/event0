@@ -1,5 +1,6 @@
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/PseudoJet.hh"
+#include "fastjet/contrib/SoftDrop.hh"
 #include "Pythia8/Pythia.h"
 #include "TMath.h"
 #include "TTree.h"
@@ -32,7 +33,11 @@ int main(int argv, char* argc[])
     // selection for final particles which are used to reconstruct jet
     double absetamax = 2.4;
     // parameter setting
+    const double z_cut = 0.1;
     const double R_jet = 0.8; // CMS cut, CMS PAS HIN-21-013
+    fastjet::contrib::SoftDrop softdrop(1, z_cut, R_jet);
+    softdrop.set_reclustering(false, 0);
+
     const double jet_ptmin = 500.0;
     double jet_absetamax = 1.6;
     vector<fastjet::PseudoJet> input_particles;
@@ -91,6 +96,10 @@ int main(int argv, char* argc[])
     std::vector<float> genJetEta;
     std::vector<float> genJetPhi;
     std::vector<int> genJetChargedMultiplicity;
+    std::vector<double > Zgs;
+    std::vector<double > Rgs;
+    std::vector<double > ZgTgBs;
+    std::vector<double > SDJetMass;
     std::vector<std::vector<int>> gendau_chg;
     std::vector<std::vector<int>> gendau_pid;
     std::vector<std::vector<float>> gendau_pt;
@@ -120,6 +129,10 @@ int main(int argv, char* argc[])
     trackTree->Branch("genJetPt", &genJetPt);
     trackTree->Branch("genJetPhi", &genJetPhi);
     trackTree->Branch("genJetChargedMultiplicity", &genJetChargedMultiplicity);
+    trackTree->Branch("Zgs", &Zgs);
+    trackTree->Branch("Rgs", &Rgs);
+    trackTree->Branch("ZgTgBs", &ZgTgBs);
+    trackTree->Branch("SDJetMass", &SDJetMass);
     trackTree->Branch("genDau_chg", &gendau_chg);
     trackTree->Branch("genDau_pid", &gendau_pid);
     trackTree->Branch("genDau_pt", &gendau_pt);
@@ -152,6 +165,10 @@ int main(int argv, char* argc[])
 	genJetEta.clear();
 	genJetPhi.clear();
 	genJetChargedMultiplicity.clear();
+	Zgs.clear();
+	Rgs.clear();
+	ZgTgBs.clear();
+	SDJetMass.clear();
 	gendau_chg.clear();
 	gendau_pid.clear();
 	gendau_pt.clear();
@@ -312,15 +329,39 @@ int main(int argv, char* argc[])
 		gendau_phi.push_back(tmp_phi);
 		gendau_chg.push_back(tmp_chg);
 		gendau_pid.push_back(tmp_pid);
+
+		// SoftDrop
+		fastjet::PseudoJet sd_jet = softdrop(inclusive_jets[i]);
+		if (!sd_jet.has_structure_of<fastjet::contrib::SoftDrop>()) 
+		{
+			Zgs.push_back(-2);
+			Rgs.push_back(-2);
+			ZgTgBs.push_back(-2);
+                        SDJetMass.push_back(-2);
+                        continue;
+		}
+
+		fastjet::PseudoJet parent1;
+		fastjet::PseudoJet parent2;
+		if (!sd_jet.has_parents(parent1,parent2))
+		{
+			Zgs.push_back(-1);
+			Rgs.push_back(-1);
+			ZgTgBs.push_back(-1);
+			SDJetMass.push_back(-1);
+			continue;
+		}
+
+		Zgs.push_back(sd_jet.structure_of<fastjet::contrib::SoftDrop>().symmetry());
+		Rgs.push_back(sd_jet.structure_of<fastjet::contrib::SoftDrop>().delta_R());
+		ZgTgBs.push_back(Zgs[i] * Rgs[i] / R_jet);
+		SDJetMass.push_back(sd_jet.m());
+
 	} //************************************END JET LOOP******************************************
-	    trackTree->Fill();
-
-
-
-
+	trackTree->Fill();
     }//****************************************END EVENT LOOP***************************************
 
-    fclose(infile);
+	fclose(infile);
 	inputFile_p.close();
     //TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/huangxi/PC/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
     TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
