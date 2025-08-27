@@ -39,8 +39,8 @@ cd  ZPC
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
 ./exec
-rm -r ana/parton-collisionsHistory.dat
-rm -r ana/zpc.res
+#rm -r ana/parton-collisionsHistory.dat
+#rm -r ana/zpc.res
 cd ../
 #rm -rf pythia_parton/parton_info.dat
 
@@ -49,7 +49,7 @@ cd hadronization_urqmd
 cd fragmentation
 ln -sf ../../ZPC/ana/zpc.dat ./
 ./main_string_fragmentation {nevent}
-rm -r ../../ZPC/ana/*
+#rm -r ../../ZPC/ana/*
 
 cd ../urqmd_code
     # script to run urqmd
@@ -70,20 +70,21 @@ cd fastjet_hadron
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
+ln -sf ../ZPC/ana/zpc.dat ./
 ./fastjet_hadron_trackTree {nevent} $ii
-rm -r ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat
+#rm -r ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat
 cd ../
 
 # Save the final results into folder
 # mkdir -p results
 # mv fastjet_hadron/final_state_hard_hadrons.bin ./results/$ii.bin
-rm -r fastjet_hadron
-rm -r hadronization_urqmd
-rm -r pythia_parton
-rm -r ZPC
-cd ../
-rm -rf job-$ii
-cd ../
+#rm -r fastjet_hadron
+#rm -r hadronization_urqmd
+#rm -r pythia_parton
+#rm -r ZPC
+#cd ../
+#rm -rf job-$ii
+#cd ../
 done
 '''.format(fold_id_start=fold_id_start, nfold = nfold, nevent = nevent, random_number = random_number)
     job_name = "NSC3_%s.sh"%(fold_id_start)
