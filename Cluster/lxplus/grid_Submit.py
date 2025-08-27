@@ -25,6 +25,12 @@ cd /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin
 for (( ii=$fold_id_start2; ii<$fold_id_end; ii++ ))
 do
 
+# Remove existing job directory if it exists
+if [ -d "Playground/job-$ii" ]; then
+    echo "Removing existing job-$ii directory..."
+    rm -rf Playground/job-$ii
+fi
+
 cp -r event0 Playground/job-$ii
 cd Playground/job-$ii
 
