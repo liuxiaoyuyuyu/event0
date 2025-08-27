@@ -20,7 +20,7 @@ A               ! TARG
 0		! quenching flag (D=0,no; 1,yes)
 2.0		! quenching parameter -dE/dx (GeV/fm) in case quenching flag=1
 2.0		! p0 cutoff in HIJING for minijet productions (D=2.0)
-3.2032d0	! parton screening mass in fm^(-1) (D=3.2032d0)
+2.265d0	! parton screening mass in fm^(-1) (D=3.2032d0)
 0		! IZPC: (D=0 forward-angle parton scatterings; 100,isotropic)
 0.33d0	! alpha in parton cascade
 1d6		! dpcoal in GeV

@@ -70,10 +70,17 @@ int main(int argv, char* argc[])
     }
     string lineh;
 
+    ifstream inputFile_zpc("zpc.dat");
+    if (!inputFile_zpc.is_open()) {
+        cerr << "Error opening zpc.dat!" << endl;
+        return 1;
+    }
+    string lineZpc;
+
     int par_pdgid;
     double par_px, par_py, par_pz, par_e, par_x, par_y, par_z, par_t, mid1, mid2;
 
-    // parton stuff
+    // parton stuff - before ZPC
     std::vector<int> parton_pid;
     std::vector<float> parton_px;
     std::vector<float> parton_py;
@@ -83,6 +90,21 @@ int main(int argv, char* argc[])
     std::vector<float> parton_y;
     std::vector<float> parton_z;
     std::vector<float> parton_t;
+    std::vector<int> parton_color1;
+    std::vector<int> parton_color2;
+
+    // parton stuff - after ZPC
+    std::vector<int> parton_pid_after_zpc;
+    std::vector<float> parton_px_after_zpc;
+    std::vector<float> parton_py_after_zpc;
+    std::vector<float> parton_pz_after_zpc;
+    std::vector<float> parton_e_after_zpc;
+    std::vector<float> parton_x_after_zpc;
+    std::vector<float> parton_y_after_zpc;
+    std::vector<float> parton_z_after_zpc;
+    std::vector<float> parton_t_after_zpc;
+    std::vector<int> parton_color1_after_zpc;
+    std::vector<int> parton_color2_after_zpc;
 
     std::vector<float> genpx;
     std::vector<float> genpy;
@@ -108,6 +130,7 @@ int main(int argv, char* argc[])
 
     TTree *trackTree = new TTree("trackTree", "v1");
 
+    // Before ZPC branches
     trackTree->Branch("par_pdgid", &parton_pid);
     trackTree->Branch("par_px", &parton_px);
     trackTree->Branch("par_py", &parton_py);
@@ -117,6 +140,21 @@ int main(int argv, char* argc[])
     trackTree->Branch("par_y", &parton_y);
     trackTree->Branch("par_z", &parton_z);
     trackTree->Branch("par_t", &parton_t);
+    trackTree->Branch("par_color1", &parton_color1);
+    trackTree->Branch("par_color2", &parton_color2);
+
+    // After ZPC branches
+    trackTree->Branch("par_pdgid_after_zpc", &parton_pid_after_zpc);
+    trackTree->Branch("par_px_after_zpc", &parton_px_after_zpc);
+    trackTree->Branch("par_py_after_zpc", &parton_py_after_zpc);
+    trackTree->Branch("par_pz_after_zpc", &parton_pz_after_zpc);
+    trackTree->Branch("par_e_after_zpc", &parton_e_after_zpc);
+    trackTree->Branch("par_x_after_zpc", &parton_x_after_zpc);
+    trackTree->Branch("par_y_after_zpc", &parton_y_after_zpc);
+    trackTree->Branch("par_z_after_zpc", &parton_z_after_zpc);
+    trackTree->Branch("par_t_after_zpc", &parton_t_after_zpc);
+    trackTree->Branch("par_color1_after_zpc", &parton_color1_after_zpc);
+    trackTree->Branch("par_color2_after_zpc", &parton_color2_after_zpc);
 
     trackTree->Branch("px", &genpx);
     trackTree->Branch("py", &genpy);
@@ -144,6 +182,7 @@ int main(int argv, char* argc[])
     //*******************************START EVENT LOOP****************************************
     for (int iev = 0; iev < Nevent; iev++)
     {
+	// Clear before ZPC vectors
 	parton_pid.clear();
 	parton_px.clear();
 	parton_py.clear();
@@ -153,6 +192,21 @@ int main(int argv, char* argc[])
 	parton_y.clear();
 	parton_z.clear();
 	parton_t.clear();
+	parton_color1.clear();
+	parton_color2.clear();
+
+	// Clear after ZPC vectors
+	parton_pid_after_zpc.clear();
+	parton_px_after_zpc.clear();
+	parton_py_after_zpc.clear();
+	parton_pz_after_zpc.clear();
+	parton_e_after_zpc.clear();
+	parton_x_after_zpc.clear();
+	parton_y_after_zpc.clear();
+	parton_z_after_zpc.clear();
+	parton_t_after_zpc.clear();
+	parton_color1_after_zpc.clear();
+	parton_color2_after_zpc.clear();
 
 	genpx.clear();
 	genpy.clear();
@@ -206,6 +260,16 @@ int main(int argv, char* argc[])
 		// Skip 0-hadron events
 		for (int i = 0; i < numPartons; ++i)
 			inputFile_p >> par_pdgid >> par_px >> par_py >> par_pz >> par_e >> par_x >> par_y >> par_z >> par_t >> mid1 >> mid2;
+		
+		// Skip ZPC data for this event too
+		int skip_zpc_event, skip_zpc_dummy, skip_zpc_npartons;
+		float skip_zpc_dummy_f;
+		inputFile_zpc >> skip_zpc_event >> skip_zpc_dummy >> skip_zpc_npartons >> skip_zpc_dummy_f >> skip_zpc_dummy >> skip_zpc_dummy >> skip_zpc_dummy >> skip_zpc_dummy;
+		for (int i = 0; i < skip_zpc_npartons; ++i) {
+			int skip_pid, skip_c1, skip_c2;
+			float skip_px, skip_py, skip_pz, skip_mass, skip_x, skip_y, skip_z, skip_t;
+			inputFile_zpc >> skip_pid >> skip_px >> skip_py >> skip_pz >> skip_mass >> skip_x >> skip_y >> skip_z >> skip_t >> skip_c1 >> skip_c2;
+		}
 		while (getline(inputFile_p, line2))
 		{
 			if (line2.empty() || line2[0] == '#') continue;
@@ -234,6 +298,83 @@ int main(int argv, char* argc[])
 		parton_y.push_back(par_y);
 		parton_z.push_back(par_z);
 		parton_t.push_back(par_t);
+		parton_color1.push_back((int)mid1);
+		parton_color2.push_back((int)mid2);
+	}
+
+	// Read ZPC.dat (partons after rescattering) for this event
+	if (inputFile_zpc.eof()) {
+		cout << "End of ZPC file" << endl;
+		break;
+	}
+
+	// Read ZPC event header
+	int zpc_event, zpc_dummy, zpc_npartons;
+	float zpc_dummy_f;
+	inputFile_zpc >> zpc_event >> zpc_dummy >> zpc_npartons >> zpc_dummy_f >> zpc_dummy >> zpc_dummy >> zpc_dummy >> zpc_dummy;
+
+	// Create temporary storage for ZPC partons
+	vector<int> zpc_pid;
+	vector<float> zpc_px, zpc_py, zpc_pz, zpc_mass, zpc_x, zpc_y, zpc_z, zpc_t;
+	vector<int> zpc_color1, zpc_color2;
+
+	// Read all ZPC partons for this event
+	for (int j = 0; j < zpc_npartons; ++j) {
+		int pid, c1, c2;
+		float px, py, pz, mass, x, y, z, t;
+		
+		if (inputFile_zpc >> pid >> px >> py >> pz >> mass >> x >> y >> z >> t >> c1 >> c2) {
+			zpc_pid.push_back(pid);
+			zpc_px.push_back(px);
+			zpc_py.push_back(py);
+			zpc_pz.push_back(pz);
+			zpc_mass.push_back(mass);
+			zpc_x.push_back(x);
+			zpc_y.push_back(y);
+			zpc_z.push_back(z);
+			zpc_t.push_back(t);
+			zpc_color1.push_back(c1);
+			zpc_color2.push_back(c2);
+		}
+	}
+
+	// Match partons by color indices and store in after_zpc vectors
+	for (size_t i = 0; i < parton_color1.size(); ++i) {
+		bool found = false;
+		for (size_t j = 0; j < zpc_color1.size(); ++j) {
+			if (parton_color1[i] == zpc_color1[j] && parton_color2[i] == zpc_color2[j]) {
+				parton_pid_after_zpc.push_back(zpc_pid[j]);
+				parton_px_after_zpc.push_back(zpc_px[j]);
+				parton_py_after_zpc.push_back(zpc_py[j]);
+				parton_pz_after_zpc.push_back(zpc_pz[j]);
+				// Convert mass to energy: E = sqrt(p^2 + m^2)
+				float p2 = zpc_px[j]*zpc_px[j] + zpc_py[j]*zpc_py[j] + zpc_pz[j]*zpc_pz[j];
+				parton_e_after_zpc.push_back(sqrt(p2 + zpc_mass[j]*zpc_mass[j]));
+				parton_x_after_zpc.push_back(zpc_x[j]);
+				parton_y_after_zpc.push_back(zpc_y[j]);
+				parton_z_after_zpc.push_back(zpc_z[j]);
+				parton_t_after_zpc.push_back(zpc_t[j]);
+				parton_color1_after_zpc.push_back(zpc_color1[j]);
+				parton_color2_after_zpc.push_back(zpc_color2[j]);
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			// If no match found, fill with dummy values
+			parton_pid_after_zpc.push_back(-999);
+			parton_px_after_zpc.push_back(-999);
+			parton_py_after_zpc.push_back(-999);
+			parton_pz_after_zpc.push_back(-999);
+			parton_e_after_zpc.push_back(-999);
+			parton_x_after_zpc.push_back(-999);
+			parton_y_after_zpc.push_back(-999);
+			parton_z_after_zpc.push_back(-999);
+			parton_t_after_zpc.push_back(-999);
+			parton_color1_after_zpc.push_back(-999);
+			parton_color2_after_zpc.push_back(-999);
+			cout << "Warning: No ZPC match found for parton with colors " << parton_color1[i] << ", " << parton_color2[i] << endl;
+		}
 	}
 
 	// PARTICLE stuff
@@ -363,6 +504,7 @@ int main(int argv, char* argc[])
 
 	fclose(infile);
 	inputFile_p.close();
+	inputFile_zpc.close();
     //TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/huangxi/PC/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
     TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
 	trackTree->Write();
