@@ -56,13 +56,14 @@ sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      
 
 # Compile and run ZPC with custom seeds
 make
-cp input_custom.ampt ana/input.ampt
-echo "#  AMPT started at " `date` > start.time
-echo $HIJING_SEED | ./ampt > nohup.out
+# Replace the original input.ampt with our custom one (will be preserved in ana/ by exec script)
+cp input_custom.ampt input.ampt
+echo "#  ZPC started at " `date` > start.time
+echo $HIJING_SEED | ./exec > nohup.out
 uname -n >> nohup.out
 cat start.time >> nohup.out
 rm -f start.time
-echo "#  AMPT Program finished at " `date` >> nohup.out
+echo "#  ZPC Program finished at " `date` >> nohup.out
 
 #rm -r ana/parton-collisionsHistory.dat
 #rm -r ana/zpc.res

@@ -40,6 +40,14 @@ int main(int argv, char* argc[])
 
     const double jet_ptmin = 500.0;
     double jet_absetamax = 1.6;
+    
+    // Event selection cuts
+    const double MIN_LEADING_JET_PT = 500.0;  // GeV
+    
+    // Individual jet cuts
+    const double MIN_JET_PT = 20.0;  // GeV
+    const double MAX_JET_ETA = 2.5;
+    const int MIN_JET_CHARGED_MULTIPLICITY = 1;  // At least 1 charged particle
     vector<fastjet::PseudoJet> input_particles;
     char inputfile[128];
     sprintf(inputfile, "particle_list.dat");
@@ -190,6 +198,8 @@ int main(int argv, char* argc[])
     trackTree->Branch("genDau_phi", &gendau_phi);
 
     int njetevent_count = 0;
+    int total_events_processed = 0;
+    int events_passing_cuts = 0;
 
     //*******************************START EVENT LOOP****************************************
     for (int iev = 0; iev < Nevent; iev++)
@@ -509,11 +519,14 @@ int main(int argv, char* argc[])
 	// get the resulting jets ordered in pt
 	vector<fastjet::PseudoJet> inclusive_jets = sorted_by_pt(clust_seq.inclusive_jets());
 
-	// Select the jet pT and output the selected events, rotate the jet at pz direction
+	// Select jets and apply individual jet cuts
 	//*************************************START JET LOOP*****************************************
 	for (unsigned int i = 0; i < inclusive_jets.size(); i++)
 	{
-		if (inclusive_jets[i].pt() < jet_ptmin)
+		// Apply individual jet cuts
+		if (inclusive_jets[i].pt() < MIN_JET_PT)
+			continue;
+		if (fabs(inclusive_jets[i].eta()) > MAX_JET_ETA)
 			continue;
 		std::vector<float> tmp_pt;
 		std::vector<float> tmp_eta;
@@ -536,6 +549,10 @@ int main(int argv, char* argc[])
 			tmp_pid.push_back(constituents[j].user_index());
 		}
 		//***********************END constituents LOOP*********************************
+
+		// Apply charged multiplicity cut
+		if (chMult < MIN_JET_CHARGED_MULTIPLICITY)
+			continue;
 
 		genJetPt.push_back(inclusive_jets[i].pt());
 		genJetEta.push_back(inclusive_jets[i].eta());
@@ -575,7 +592,25 @@ int main(int argv, char* argc[])
 		SDJetMass.push_back(sd_jet.m());
 
 	} //************************************END JET LOOP******************************************
-	trackTree->Fill();
+	
+	// Apply event selection cut: Leading jet pT
+	bool pass_cuts = true;
+	
+	float leading_jet_pt = 0.0;
+	if (!inclusive_jets.empty()) {
+		leading_jet_pt = inclusive_jets[0].pt();
+	}
+	
+	if (leading_jet_pt <= MIN_LEADING_JET_PT) {
+		pass_cuts = false;
+	}
+	
+	// Update statistics and save if cuts pass
+	total_events_processed++;
+	if (pass_cuts) {
+		events_passing_cuts++;
+		trackTree->Fill();
+	}
     }//****************************************END EVENT LOOP***************************************
 
 	fclose(infile);
@@ -585,6 +620,11 @@ int main(int argv, char* argc[])
     TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
 	trackTree->Write();
     fout->Close();
+    
+    // Print cut statistics
+    cout << "Events processed: " << total_events_processed << ", passed cuts: " << events_passing_cuts 
+         << " (" << (total_events_processed > 0 ? 100.0 * events_passing_cuts / total_events_processed : 0.0) << "%)" << endl;
+    
     return 0;
 }
 
