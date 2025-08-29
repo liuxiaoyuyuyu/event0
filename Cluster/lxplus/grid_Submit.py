@@ -49,10 +49,11 @@ ln -sf ../pythia_parton/parton_info.dat ./
 HIJING_SEED=$(({random_number} + $ii * 54321 + $1 * 13))
 ZPC_SEED=$(({random_number} + $ii * 98765 + $1 * 17))
 
-# Create custom input.ampt with job-specific seeds
+# Create custom input.ampt with job-specific seeds and event number
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
 sed "s/^53153515[[:space:]]*![[:space:]]*random seed for HIJING/$HIJING_SEED    ! random seed for HIJING/" | \\
-sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" > input_custom.ampt
+sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" | \\
+sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_custom.ampt
 
 # Compile and run ZPC with custom seeds
 make
