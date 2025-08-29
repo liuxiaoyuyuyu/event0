@@ -44,7 +44,26 @@ cd ../
 cd  ZPC
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
-./exec
+
+# Generate job-specific seeds for ZPC
+HIJING_SEED=$(({random_number} + $ii * 54321 + $1 * 13))
+ZPC_SEED=$(({random_number} + $ii * 98765 + $1 * 17))
+
+# Create custom input.ampt with job-specific seeds
+sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
+sed "s/^53153515[[:space:]]*![[:space:]]*random seed for HIJING/$HIJING_SEED    ! random seed for HIJING/" | \\
+sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" > input_custom.ampt
+
+# Compile and run ZPC with custom seeds
+make
+cp input_custom.ampt ana/input.ampt
+echo "#  AMPT started at " `date` > start.time
+echo $HIJING_SEED | ./ampt > nohup.out
+uname -n >> nohup.out
+cat start.time >> nohup.out
+rm -f start.time
+echo "#  AMPT Program finished at " `date` >> nohup.out
+
 #rm -r ana/parton-collisionsHistory.dat
 #rm -r ana/zpc.res
 cd ../
@@ -77,6 +96,7 @@ ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
+ln -sf ../ZPC/ana/zpc.res ./
 ./fastjet_hadron_trackTree {nevent} $ii
 #rm -r ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat
 cd ../
@@ -107,8 +127,7 @@ log             = logs/condor.log
 # should_transfer_files = YES
 # transfer_input_files = event0
 # transfer_output_files = Playground
-#+MaxRuntime =200000
-+MaxRuntime =4000
++MaxRuntime =40000
 queue {nfold}
     '''.format(job_name=job_name, nfold=nfold)
     job_name2 = "Submit_%s.sh"%(fold_id_start)
@@ -138,4 +157,3 @@ if __name__=='__main__':
     #mmid = fold_id_start * tot_ev + n
     submit(fold_id_start * nfold * nfold, nfold, nevent, random_number + fold_id_start)
     #start_num += jobs_per_cpu
-

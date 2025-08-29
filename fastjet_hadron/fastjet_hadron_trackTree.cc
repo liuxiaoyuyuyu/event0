@@ -77,6 +77,12 @@ int main(int argv, char* argc[])
     }
     string lineZpc;
 
+    ifstream inputFile_collision("zpc.res");
+    if (!inputFile_collision.is_open()) {
+        cerr << "Error opening zpc.res!" << endl;
+        return 1;
+    }
+
     int par_pdgid;
     double par_px, par_py, par_pz, par_e, par_x, par_y, par_z, par_t, mid1, mid2;
 
@@ -105,6 +111,9 @@ int main(int argv, char* argc[])
     std::vector<float> parton_t_after_zpc;
     std::vector<int> parton_color1_after_zpc;
     std::vector<int> parton_color2_after_zpc;
+
+    // Collision count per event
+    int total_collisions;
 
     std::vector<float> genpx;
     std::vector<float> genpy;
@@ -155,6 +164,9 @@ int main(int argv, char* argc[])
     trackTree->Branch("par_t_after_zpc", &parton_t_after_zpc);
     trackTree->Branch("par_color1_after_zpc", &parton_color1_after_zpc);
     trackTree->Branch("par_color2_after_zpc", &parton_color2_after_zpc);
+
+    // Collision count branch
+    trackTree->Branch("total_collisions", &total_collisions);
 
     trackTree->Branch("px", &genpx);
     trackTree->Branch("py", &genpy);
@@ -207,6 +219,11 @@ int main(int argv, char* argc[])
 	parton_t_after_zpc.clear();
 	parton_color1_after_zpc.clear();
 	parton_color2_after_zpc.clear();
+
+	// Reset collision count
+	total_collisions = 0;
+
+
 
 	genpx.clear();
 	genpy.clear();
@@ -270,6 +287,39 @@ int main(int argv, char* argc[])
 			float skip_px, skip_py, skip_pz, skip_mass, skip_x, skip_y, skip_z, skip_t;
 			inputFile_zpc >> skip_pid >> skip_px >> skip_py >> skip_pz >> skip_mass >> skip_x >> skip_y >> skip_z >> skip_t >> skip_c1 >> skip_c2;
 		}
+		
+		// Skip zpc.res data for this 0-hadron event too
+		string skip_collision_line;
+		while (getline(inputFile_collision, skip_collision_line)) {
+			if (skip_collision_line.find("Event") != string::npos && skip_collision_line.find("run") != string::npos) {
+				// Parse event number from "Event X, run Y"
+				size_t pos1 = skip_collision_line.find("Event");
+				size_t pos2 = skip_collision_line.find(",");
+				if (pos1 != string::npos && pos2 != string::npos) {
+					string event_str = skip_collision_line.substr(pos1 + 5, pos2 - pos1 - 5);
+					istringstream iss_event(event_str);
+					int skip_event_num;
+					iss_event >> skip_event_num;
+					
+					// If this is a different event, we're done skipping
+					if (skip_event_num != idx) {
+						// Put the line back for the next event
+						inputFile_collision.seekg(-skip_collision_line.length() - 1, ios::cur);
+						break;
+					}
+					
+					// Skip the rest of this event's data (operations, collisions, etc.)
+					while (getline(inputFile_collision, skip_collision_line)) {
+						if (skip_collision_line.find("Event") != string::npos && skip_collision_line.find("run") != string::npos) {
+							// Found next event, put the line back
+							inputFile_collision.seekg(-skip_collision_line.length() - 1, ios::cur);
+							break;
+						}
+					}
+					break;
+				}
+			}
+		}
 		while (getline(inputFile_p, line2))
 		{
 			if (line2.empty() || line2[0] == '#') continue;
@@ -278,9 +328,9 @@ int main(int argv, char* argc[])
 		istringstream iss(line2);
 		iss >> numPartons;
 
-		if (inputFile_p.eof() || inputFile_h.eof()) 
+		if (inputFile_p.eof() || inputFile_h.eof() || inputFile_zpc.eof() || inputFile_collision.eof()) 
             	{
-                	cout << "Skip until EOF" << endl;
+                	cout << "Skip until EOF in one of the input files" << endl;
                 	break;
             	}
 	}
@@ -302,66 +352,50 @@ int main(int argv, char* argc[])
 		parton_color2.push_back((int)mid2);
 	}
 
-	// Read ZPC.dat (partons after rescattering) for this event
+	// ZPC stuff (partons after rescattering)
+	
+	int zpc_npartons;
 	if (inputFile_zpc.eof()) {
 		cout << "End of ZPC file" << endl;
 		break;
 	}
-
+	
 	// Read ZPC event header
-	int zpc_event, zpc_dummy, zpc_npartons;
+	int zpc_event, zpc_dummy;
 	float zpc_dummy_f;
 	inputFile_zpc >> zpc_event >> zpc_dummy >> zpc_npartons >> zpc_dummy_f >> zpc_dummy >> zpc_dummy >> zpc_dummy >> zpc_dummy;
 
-	// Create temporary storage for ZPC partons
-	vector<int> zpc_pid;
-	vector<float> zpc_px, zpc_py, zpc_pz, zpc_mass, zpc_x, zpc_y, zpc_z, zpc_t;
-	vector<int> zpc_color1, zpc_color2;
-
 	// Read all ZPC partons for this event
-	for (int j = 0; j < zpc_npartons; ++j) {
+	for (int i = 0; i < zpc_npartons; ++i) {
 		int pid, c1, c2;
 		float px, py, pz, mass, x, y, z, t;
 		
-		if (inputFile_zpc >> pid >> px >> py >> pz >> mass >> x >> y >> z >> t >> c1 >> c2) {
-			zpc_pid.push_back(pid);
-			zpc_px.push_back(px);
-			zpc_py.push_back(py);
-			zpc_pz.push_back(pz);
-			zpc_mass.push_back(mass);
-			zpc_x.push_back(x);
-			zpc_y.push_back(y);
-			zpc_z.push_back(z);
-			zpc_t.push_back(t);
-			zpc_color1.push_back(c1);
-			zpc_color2.push_back(c2);
-		}
-	}
-
-	// Match partons by color indices and store in after_zpc vectors
-	for (size_t i = 0; i < parton_color1.size(); ++i) {
+		inputFile_zpc >> pid >> px >> py >> pz >> mass >> x >> y >> z >> t >> c1 >> c2;
+		
+		// Match partons by color indices and store in after_zpc vectors
 		bool found = false;
-		for (size_t j = 0; j < zpc_color1.size(); ++j) {
-			if (parton_color1[i] == zpc_color1[j] && parton_color2[i] == zpc_color2[j]) {
-				parton_pid_after_zpc.push_back(zpc_pid[j]);
-				parton_px_after_zpc.push_back(zpc_px[j]);
-				parton_py_after_zpc.push_back(zpc_py[j]);
-				parton_pz_after_zpc.push_back(zpc_pz[j]);
+		for (size_t j = 0; j < parton_color1.size(); ++j) {
+			if (parton_color1[j] == c1 && parton_color2[j] == c2) {
+				parton_pid_after_zpc.push_back(pid);
+				parton_px_after_zpc.push_back(px);
+				parton_py_after_zpc.push_back(py);
+				parton_pz_after_zpc.push_back(pz);
 				// Convert mass to energy: E = sqrt(p^2 + m^2)
-				float p2 = zpc_px[j]*zpc_px[j] + zpc_py[j]*zpc_py[j] + zpc_pz[j]*zpc_pz[j];
-				parton_e_after_zpc.push_back(sqrt(p2 + zpc_mass[j]*zpc_mass[j]));
-				parton_x_after_zpc.push_back(zpc_x[j]);
-				parton_y_after_zpc.push_back(zpc_y[j]);
-				parton_z_after_zpc.push_back(zpc_z[j]);
-				parton_t_after_zpc.push_back(zpc_t[j]);
-				parton_color1_after_zpc.push_back(zpc_color1[j]);
-				parton_color2_after_zpc.push_back(zpc_color2[j]);
+				float p2 = px*px + py*py + pz*pz;
+				parton_e_after_zpc.push_back(sqrt(p2 + mass*mass));
+				parton_x_after_zpc.push_back(x);
+				parton_y_after_zpc.push_back(y);
+				parton_z_after_zpc.push_back(z);
+				parton_t_after_zpc.push_back(t);
+				parton_color1_after_zpc.push_back(c1);
+				parton_color2_after_zpc.push_back(c2);
 				found = true;
 				break;
 			}
 		}
+		
+		// If no match found, fill with -999
 		if (!found) {
-			// If no match found, fill with dummy values
 			parton_pid_after_zpc.push_back(-999);
 			parton_px_after_zpc.push_back(-999);
 			parton_py_after_zpc.push_back(-999);
@@ -373,9 +407,51 @@ int main(int argv, char* argc[])
 			parton_t_after_zpc.push_back(-999);
 			parton_color1_after_zpc.push_back(-999);
 			parton_color2_after_zpc.push_back(-999);
-			cout << "Warning: No ZPC match found for parton with colors " << parton_color1[i] << ", " << parton_color2[i] << endl;
 		}
 	}
+
+	// Collision count stuff
+	
+	// Read collision count from zpc.res for this event
+	string collision_line;
+	total_collisions = 0;
+	
+	while (getline(inputFile_collision, collision_line)) {
+		if (collision_line.find("Event") != string::npos && collision_line.find("run") != string::npos) {
+			// Parse event number from "Event X, run Y"
+			size_t pos1 = collision_line.find("Event");
+			size_t pos2 = collision_line.find(",");
+			if (pos1 != string::npos && pos2 != string::npos) {
+				string event_str = collision_line.substr(pos1 + 5, pos2 - pos1 - 5);
+				istringstream iss_event(event_str);
+				int event_num;
+				iss_event >> event_num;
+				
+				if (event_num == idx) {
+					// Found our event, now read the collision count
+					while (getline(inputFile_collision, collision_line)) {
+						if (collision_line.find("number of collisions between particles =") != string::npos) {
+							// Parse collision count
+							size_t pos = collision_line.find("=");
+							if (pos != string::npos) {
+								string count_str = collision_line.substr(pos + 1);
+								istringstream iss_count(count_str);
+								iss_count >> total_collisions;
+								break;
+							}
+						}
+					}
+					break;
+				} else if (event_num > idx) {
+					// We've moved past our event, put the line back
+					inputFile_collision.seekg(-collision_line.length() - 1, ios::cur);
+					break;
+				}
+			}
+		}
+	}
+
+
 
 	// PARTICLE stuff
 
