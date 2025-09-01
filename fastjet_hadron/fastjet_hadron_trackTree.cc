@@ -437,8 +437,21 @@ int main(int argv, char* argc[])
 	// get the resulting jets ordered in pt
 	vector<fastjet::PseudoJet> inclusive_jets = sorted_by_pt(clust_seq.inclusive_jets());
 
-	// Select jets and apply individual jet cuts
-	//*************************************START JET LOOP*****************************************
+	// Apply event selection cut FIRST: Leading jet pT
+	bool pass_cuts = true;
+	float leading_jet_pt = 0.0;
+	if (!inclusive_jets.empty()) {
+		leading_jet_pt = inclusive_jets[0].pt();
+	}
+	
+	if (leading_jet_pt <= MIN_LEADING_JET_PT) {
+		pass_cuts = false;
+	}
+
+	// Only collect jet data if the event passes the cut
+	if (pass_cuts) {
+		// Select jets and apply individual jet cuts
+		//*************************************START JET LOOP*****************************************
 	for (unsigned int i = 0; i < inclusive_jets.size(); i++)
 	{
 		// Apply individual jet cuts
@@ -510,18 +523,7 @@ int main(int argv, char* argc[])
 		SDJetMass.push_back(sd_jet.m());
 
 	} //************************************END JET LOOP******************************************
-	
-	// Apply event selection cut: Leading jet pT
-	bool pass_cuts = true;
-	
-	float leading_jet_pt = 0.0;
-	if (!inclusive_jets.empty()) {
-		leading_jet_pt = inclusive_jets[0].pt();
-	}
-	
-	if (leading_jet_pt <= MIN_LEADING_JET_PT) {
-		pass_cuts = false;
-	}
+	} // End of if (pass_cuts) block
 	
 	// Update statistics and save if cuts pass
 	total_events_processed++;
