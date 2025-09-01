@@ -53,7 +53,9 @@ ZPC_SEED=$(({random_number} + $ii * 98765 + $1 * 17))
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
 sed "s/^53153515[[:space:]]*![[:space:]]*random seed for HIJING/$HIJING_SEED    ! random seed for HIJING/" | \\
 sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" | \\
-sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_custom.ampt
+sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" | \
+sed "s/^22\.65d0[[:space:]]*! parton screening mass in fm\^\\(-1\\)/0.1d0        ! parton screening mass in fm^(-1) (exaggerated for testing)/" | > input_custom.ampt
+
 
 # Compile and run ZPC with custom seeds
 make
@@ -99,7 +101,7 @@ ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
-./fastjet_hadron_trackTree {nevent} $ii
+./fastjet_hadron_trackTree {nevent} $1 $ii
 #rm -r ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat
 cd ../
 

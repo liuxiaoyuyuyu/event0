@@ -29,7 +29,8 @@ int main(int argv, char* argc[])
     gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
 
     int Nevent = atoi(argc[1]);
-    int jobnumber = atoi(argc[2]);
+    int condor_process_id = atoi(argc[2]);  // This is the Condor Process ID ($1)
+    int job_id = atoi(argc[3]);             // This is the job ID within the process ($ii)
     // selection for final particles which are used to reconstruct jet
     double absetamax = 2.4;
     // parameter setting
@@ -616,8 +617,8 @@ int main(int argv, char* argc[])
 	fclose(infile);
 	inputFile_p.close();
 	inputFile_zpc.close();
-    //TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/huangxi/PC/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
-    TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d.root",jobnumber) ,"recreate");
+    // Use both Condor Process ID and Job ID for general usage
+    TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d_%d.root",condor_process_id, job_id) ,"recreate");
 	trackTree->Write();
     fout->Close();
     
