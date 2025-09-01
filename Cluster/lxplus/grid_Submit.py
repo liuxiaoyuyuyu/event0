@@ -57,8 +57,6 @@ sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" | \
 sed "s/^2\.265d0[[:space:]]*! parton screening mass in fm\^\\(-1\\)/0.1d0        ! parton screening mass in fm^(-1) (exaggerated for testing)/" > input_custom.ampt
 
 
-# Compile and run ZPC with custom seeds
-make
 # Replace the original input.ampt with our custom one (will be preserved in ana/ by exec script)
 cp input_custom.ampt input.ampt
 echo "#  ZPC started at " `date` > start.time
