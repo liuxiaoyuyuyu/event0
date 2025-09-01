@@ -449,7 +449,7 @@ int main(int argv, char* argc[])
 		std::vector<float> tmp_pt;
 		std::vector<float> tmp_eta;
 		std::vector<float> tmp_phi;
-		std::vector<float> tmp_chg;
+		std::vector<int> tmp_chg;
 		std::vector<int> tmp_pid;
 		vector<PseudoJet> constituents = inclusive_jets[i].constituents();
 		int chMult = 0;
