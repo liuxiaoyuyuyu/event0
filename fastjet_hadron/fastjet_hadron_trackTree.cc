@@ -72,13 +72,6 @@ int main(int argv, char* argc[])
     string line2;
     getline(inputFile_p, line); // Read and ignore the first line
 
-    ifstream inputFile_h("hadrons_frag_full.dat");
-    if (!inputFile_h.is_open()) {
-        cerr << "Error opening hadrons_frag_full.dat!" << endl;
-        return 1;
-    }
-    string lineh;
-
     ifstream inputFile_zpc("zpc.dat");
     if (!inputFile_zpc.is_open()) {
         cerr << "Error opening zpc.dat!" << endl;
@@ -234,8 +227,6 @@ int main(int argv, char* argc[])
 	// Reset collision count
 	total_collisions = 0;
 
-
-
 	genpx.clear();
 	genpy.clear();
 	genpz.clear();
@@ -257,7 +248,7 @@ int main(int argv, char* argc[])
 	gendau_eta.clear();
 	gendau_phi.clear();
 
-	// PARTON stuff
+	// PARTON stuff - Read parton info for this event
 
 	int numPartons;
 	if (inputFile_p.eof())
@@ -273,79 +264,7 @@ int main(int argv, char* argc[])
 	istringstream iss(line2);
 	iss >> numPartons;
 
-	if (inputFile_h.eof())
-	{
-		cout << "end the hadron file" << endl;
-		break;
-	}
-	int idx, nHadrons, z3, z4;
-	while (getline(inputFile_h, lineh))
-	{
-		istringstream issh(lineh);
-		issh >> idx >> nHadrons >> z3 >> z4;
-		if (nHadrons > 0) break;
-
-		// Skip 0-hadron events
-		for (int i = 0; i < numPartons; ++i)
-			inputFile_p >> par_pdgid >> par_px >> par_py >> par_pz >> par_e >> par_x >> par_y >> par_z >> par_t >> mid1 >> mid2;
-		
-		// Skip ZPC data for this event too
-		int skip_zpc_event, skip_zpc_dummy, skip_zpc_npartons;
-		float skip_zpc_dummy_f;
-		inputFile_zpc >> skip_zpc_event >> skip_zpc_dummy >> skip_zpc_npartons >> skip_zpc_dummy_f >> skip_zpc_dummy >> skip_zpc_dummy >> skip_zpc_dummy >> skip_zpc_dummy;
-		for (int i = 0; i < skip_zpc_npartons; ++i) {
-			int skip_pid, skip_c1, skip_c2;
-			float skip_px, skip_py, skip_pz, skip_mass, skip_x, skip_y, skip_z, skip_t;
-			inputFile_zpc >> skip_pid >> skip_px >> skip_py >> skip_pz >> skip_mass >> skip_x >> skip_y >> skip_z >> skip_t >> skip_c1 >> skip_c2;
-		}
-		
-		// Skip zpc.res data for this 0-hadron event too
-		string skip_collision_line;
-		while (getline(inputFile_collision, skip_collision_line)) {
-			if (skip_collision_line.find("Event") != string::npos && skip_collision_line.find("run") != string::npos) {
-				// Parse event number from "Event X, run Y"
-				size_t pos1 = skip_collision_line.find("Event");
-				size_t pos2 = skip_collision_line.find(",");
-				if (pos1 != string::npos && pos2 != string::npos) {
-					string event_str = skip_collision_line.substr(pos1 + 5, pos2 - pos1 - 5);
-					istringstream iss_event(event_str);
-					int skip_event_num;
-					iss_event >> skip_event_num;
-					
-					// If this is a different event, we're done skipping
-					if (skip_event_num != idx) {
-						// Put the line back for the next event
-						inputFile_collision.seekg(-skip_collision_line.length() - 1, ios::cur);
-						break;
-					}
-					
-					// Skip the rest of this event's data (operations, collisions, etc.)
-					while (getline(inputFile_collision, skip_collision_line)) {
-						if (skip_collision_line.find("Event") != string::npos && skip_collision_line.find("run") != string::npos) {
-							// Found next event, put the line back
-							inputFile_collision.seekg(-skip_collision_line.length() - 1, ios::cur);
-							break;
-						}
-					}
-					break;
-				}
-			}
-		}
-		while (getline(inputFile_p, line2))
-		{
-			if (line2.empty() || line2[0] == '#') continue;
-			break;
-		}
-		istringstream iss(line2);
-		iss >> numPartons;
-
-		if (inputFile_p.eof() || inputFile_h.eof() || inputFile_zpc.eof() || inputFile_collision.eof()) 
-            	{
-                	cout << "Skip until EOF in one of the input files" << endl;
-                	break;
-            	}
-	}
-
+	// Read all partons for this event
 	for (int i = 0; i < numPartons; ++i)
 	{
 		inputFile_p >> par_pdgid >> par_px >> par_py >> par_pz >> par_e >> par_x >> par_y >> par_z >> par_t >> mid1 >> mid2;
@@ -421,7 +340,7 @@ int main(int argv, char* argc[])
 		}
 	}
 
-	// Collision count stuff
+	// Collision count stuff - Read collision count for this event
 	
 	// Read collision count from zpc.res for this event
 	string collision_line;
@@ -438,7 +357,7 @@ int main(int argv, char* argc[])
 				int event_num;
 				iss_event >> event_num;
 				
-				if (event_num == idx) {
+				if (event_num == iev) {  // Use iev instead of idx
 					// Found our event, now read the collision count
 					while (getline(inputFile_collision, collision_line)) {
 						if (collision_line.find("number of collisions between particles =") != string::npos) {
@@ -453,7 +372,7 @@ int main(int argv, char* argc[])
 						}
 					}
 					break;
-				} else if (event_num > idx) {
+				} else if (event_num > iev) {
 					// We've moved past our event, put the line back
 					inputFile_collision.seekg(-collision_line.length() - 1, ios::cur);
 					break;
@@ -461,8 +380,6 @@ int main(int argv, char* argc[])
 			}
 		}
 	}
-
-
 
 	// PARTICLE stuff
 
@@ -475,7 +392,7 @@ int main(int argv, char* argc[])
 	}
 
 	fscanf(infile, "%s %d\n", stemp1, &total_number_of_particles);
-	cout << "nHadrons: " << nHadrons << "\ttotal_number_of_particles: " << total_number_of_particles << endl;
+	cout << "Event " << iev << " - total_number_of_particles: " << total_number_of_particles << endl;
 	input_particles.clear();
 	//******************START daughter particles LOOP********************************
 	for (auto i = 0; i < total_number_of_particles; i++)
@@ -532,7 +449,7 @@ int main(int argv, char* argc[])
 		std::vector<float> tmp_pt;
 		std::vector<float> tmp_eta;
 		std::vector<float> tmp_phi;
-		std::vector<int> tmp_chg;
+		std::vector<float> tmp_chg;
 		std::vector<int> tmp_pid;
 		vector<PseudoJet> constituents = inclusive_jets[i].constituents();
 		int chMult = 0;
@@ -617,6 +534,7 @@ int main(int argv, char* argc[])
 	fclose(infile);
 	inputFile_p.close();
 	inputFile_zpc.close();
+	inputFile_collision.close();
     // Use both Condor Process ID and Job ID for general usage
     TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d_%d.root",condor_process_id, job_id) ,"recreate");
 	trackTree->Write();

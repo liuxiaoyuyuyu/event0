@@ -138,7 +138,12 @@ int main(int argv, char* argc[])
             break;
         }
         fscanf(infile1,"%d %d %d %lf %d %d %d %d\n",&mid, &mid1, &Npart, &midd, &mid2, &mid3, &mid4, &midd5);
-        if (Npart==0 ) {output2 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; output3 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; continue;}
+        // Process all events, including those with 0 partons
+        if (Npart==0 ) {
+            output2 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; 
+            output3 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; 
+            // Don't continue - process this event normally
+        }
         int Nquark=0;
         int Naquark =0;
         int Ngluon=0;
@@ -589,10 +594,11 @@ int main(int argv, char* argc[])
                 }
             }
         }
-        //if(simble==0){output2 << iEvent+1<<" "<<simble << endl;}
+        // Write to hadrons_frag_full.dat for all events
         output3 << "         " << iEvent <<"          " << simble << "         0         0" << endl;
+        // Write to hadrons_frag1.dat for all events (including 0-hadron events)
+        output2 << "         " << iEvent <<"          " << simble << "         0         0" << endl;
         if (simble > 0) {
-            output2 << "         " << iEvent <<"          " << simble << "         0         0" << endl;
             for(int i=0; i<pythia.event.size();i++)
                 {
                 if (pythia.event[i].isFinal() ){
