@@ -6,7 +6,9 @@ from subprocess import call
 import sys
 import random
 import time
-def submit(fold_id_start=0, nfold = 1, nevent = 10, random_number = 0):
+import os
+
+def submit(njobs=1, nevent=10, batch_num=0):
     jobs = '''#!/bin/bash
 
 hostname
@@ -16,49 +18,46 @@ export PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install
 export LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF
 export LD_LIBRARY_PATH=$PYTHIA8/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$LD_LIBRARY_PATH
 
-# First link the file
+# Get the job ID from Condor (0 to N-1)
+JOB_ID=$1
 
-fold_id_start2=$(({fold_id_start} + $1 * {nfold}))
-fold_id_end=$(({fold_id_start} + $1 * {nfold} + {nfold}))
 cd /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin
-# Then run the framework
-for (( ii=$fold_id_start2; ii<$fold_id_end; ii++ ))
-do
 
-# Remove existing job directory if it exists
-if [ -d "Playground/job-$ii" ]; then
-    echo "Removing existing job-$ii directory..."
-    rm -rf Playground/job-$ii
+# Create Playground directory if it doesn't exist
+if [ ! -d "Playground" ]; then
+    mkdir -p Playground
 fi
 
-cp -r event0 Playground/job-$ii
-cd Playground/job-$ii
+# Remove existing job directory if it exists
+if [ -d "Playground/job-$JOB_ID" ]; then
+    echo "Removing existing job-$JOB_ID directory..."
+    rm -rf Playground/job-$JOB_ID
+fi
+
+cp -r event0 Playground/job-$JOB_ID
+cd Playground/job-$JOB_ID
 
 # Generate the pythia parton
-#sleep 1s
 cd pythia_parton
-./mymain06 {nevent} $(({random_number} + $ii * 12345 + $1 * 11))
+./mymain06 {nevent} $(({random_seed} + $JOB_ID * 12345))
 cd ../
 
 # ZPC for parton cascade
-cd  ZPC
+cd ZPC
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
 
 # Generate job-specific seeds for ZPC
-HIJING_SEED=$(({random_number} + $ii * 54321 + $1 * 13))
-ZPC_SEED=$(({random_number} + $ii * 98765 + $1 * 17))
+HIJING_SEED=$(({random_seed} + $JOB_ID * 54321))
+ZPC_SEED=$(({random_seed} + $JOB_ID * 98765))
 
 # Create custom input.ampt with job-specific seeds and event number
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
 sed "s/^53153515[[:space:]]*![[:space:]]*random seed for HIJING/$HIJING_SEED    ! random seed for HIJING/" | \\
 sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" | \\
 sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_custom.ampt
-#sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" | \
-#sed "s/^2\.265d0/0.1d0/" > input_custom.ampt
 
-
-# Replace the original input.ampt with our custom one (will be preserved in ana/ by exec script)
+# Replace the original input.ampt with our custom one
 cp input_custom.ampt input.ampt
 echo "#  ZPC started at " `date` > start.time
 echo $HIJING_SEED | ./exec > nohup.out
@@ -67,17 +66,13 @@ cat start.time >> nohup.out
 rm -f start.time
 echo "#  ZPC Program finished at " `date` >> nohup.out
 
-#rm -r ana/parton-collisionsHistory.dat
-#rm -r ana/zpc.res
 cd ../
-#rm -rf pythia_parton/parton_info.dat
 
 # fragmentation and urqmd
 cd hadronization_urqmd
 cd fragmentation
 ln -sf ../../ZPC/ana/zpc.dat ./
 ./main_string_fragmentation {nevent}
-#rm -r ../../ZPC/ana/*
 
 cd ../urqmd_code
     # script to run urqmd
@@ -93,6 +88,7 @@ cd ../urqmd_code
     cd ..
 cd ../
 cd ../
+
 # jet finding of final hadrons
 cd fastjet_hadron
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
@@ -100,23 +96,20 @@ ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
-./fastjet_hadron_trackTree {nevent} $1 $ii
-#rm -r ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat
+./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
 cd ../
 
-# Save the final results into folder
-# mkdir -p results
-# mv fastjet_hadron/final_state_hard_hadrons.bin ./results/$ii.bin
+# Clean up
 rm -r fastjet_hadron
 rm -r hadronization_urqmd
 rm -r pythia_parton
 rm -r ZPC
 cd ../
-rm -rf job-$ii
+rm -rf job-$JOB_ID
 cd ../
-done
-'''.format(fold_id_start=fold_id_start, nfold = nfold, nevent = nevent, random_number = random_number)
-    job_name = "NSC3_%s.sh"%(fold_id_start)
+'''.format(nevent=nevent, random_seed=random.randint(0, 10**6), batch_num=batch_num)
+
+    job_name = f"NSC3_batch{batch_num}.sh"
     with open(job_name, 'w') as fout:
         fout.write(jobs)
 
@@ -124,39 +117,38 @@ done
 environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH"
 executable      = {job_name}
 arguments       = $(Process)
-output          = logs/out_$(Process).log
-error           = logs/err_$(Process).log
-log             = logs/condor.log
-# should_transfer_files = YES
-# transfer_input_files = event0
-# transfer_output_files = Playground
+output          = logs/out_batch{batch_num}_$(Process).log
+error           = logs/err_batch{batch_num}_$(Process).log
+log             = logs/condor_batch{batch_num}.log
 +MaxRuntime =40000
-queue {nfold}
-    '''.format(job_name=job_name, nfold=nfold)
-    job_name2 = "Submit_%s.sh"%(fold_id_start)
+queue {njobs}
+    '''.format(job_name=job_name, njobs=njobs, batch_num=batch_num)
+    
+    job_name2 = f"Submit_batch{batch_num}.sh"
     with open(job_name2, 'w') as fout:
         fout.write(condor_submit)
-    call(['mkdir', '-p', 'logs'])
+    
+    # Create logs directory if it doesn't exist
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+    
     call(['condor_submit', job_name2])
-    #call(['mv', job_name, 'jobs/'])
-    #call(['mv', job_name2, 'jobs/'])
-# comparing the grid size dependence of the hypersf cube
-# etaos_ymin = 0.08 for both ampt runs, not 0.2
+    
+    print(f"Submitted batch {batch_num}: {njobs} jobs with {nevent} events each")
+    print(f"Condor submit file: {job_name2}")
+    print(f"Bash script: {job_name}")
 
 if __name__=='__main__':
     import sys
-    fold_id_start = int(int(sys.argv[1]))
-    nfold = int(int(sys.argv[2]))
-    nevent = int(int(sys.argv[3]))
-    # Get the current system time as a seed
-    seed = int(time.time())
-
-    # Seed the random number generator
-    random.seed(seed)
-
-    # Generate a random number between 0 and 10,000,000
-    random_number = random.randint(0, 10**6)
-    #for n in range(0,nods):
-    #mmid = fold_id_start * tot_ev + n
-    submit(fold_id_start * nfold * nfold, nfold, nevent, random_number + fold_id_start)
-    #start_num += jobs_per_cpu
+    if len(sys.argv) != 4:
+        print("Usage: python3 grid_Submit.py <N_jobs> <events_per_job> <batch_number>")
+        print("Example: python3 grid_Submit.py 100 50000 0")
+        print("Example: python3 grid_Submit.py 100 50000 1")
+        sys.exit(1)
+    
+    njobs = int(sys.argv[1])      # Number of jobs (0 to N-1)
+    nevent = int(sys.argv[2])     # Events per job
+    batch_num = int(sys.argv[3])  # Batch number for unique output names
+    
+    print(f"Submitting batch {batch_num}: {njobs} jobs with {nevent} events each")
+    submit(njobs, nevent, batch_num)

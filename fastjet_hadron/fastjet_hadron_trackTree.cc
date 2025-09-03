@@ -23,14 +23,20 @@ using namespace fastjet;
 Pythia pythia;
 Pythia8::ParticleData &particleData = pythia.particleData;
 
-int main(int argv, char* argc[])
+int main(int argc, char* argv[])
 {
     gInterpreter->GenerateDictionary("vector<vector<float> >", "vector");
     gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
 
-    int Nevent = atoi(argc[1]);
-    int condor_process_id = atoi(argc[2]);  // This is the Condor Process ID ($1)
-    int job_id = atoi(argc[3]);             // This is the job ID within the process ($ii)
+    if (argc != 4) {
+        cout << "Usage: " << argv[0] << " <nevent> <job_id> <batch_number>" << endl;
+        cout << "Example: " << argv[0] << " 50000 0 0" << endl;
+        return 1;
+    }
+
+    int Nevent = atoi(argv[1]);
+    int job_id = atoi(argv[2]);             // This is the job ID (0 to N-1)
+    int batch_number = atoi(argv[3]);       // Batch number for unique output names
     // selection for final particles which are used to reconstruct jet
     double absetamax = 2.4;
     // parameter setting
@@ -537,7 +543,7 @@ int main(int argv, char* argc[])
 	inputFile_zpc.close();
 	inputFile_collision.close();
     // Use both Condor Process ID and Job ID for general usage
-    TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_%d_%d.root",condor_process_id, job_id) ,"recreate");
+    TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch%d_%d.root", batch_number, job_id) ,"recreate");
 	trackTree->Write();
     fout->Close();
     
