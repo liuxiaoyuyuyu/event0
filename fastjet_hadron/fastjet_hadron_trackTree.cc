@@ -525,13 +525,11 @@ int main(int argv, char* argc[])
 	
 	// Update statistics and save if cuts pass
 	total_events_processed++;
-	/*
 	if (pass_cuts) {
 		events_passing_cuts++;
 		trackTree->Fill();
-	}*/
-	events_passing_cuts++;
-	trackTree->Fill();
+	}
+	
     }//****************************************END EVENT LOOP***************************************
 
 	fclose(infile);
