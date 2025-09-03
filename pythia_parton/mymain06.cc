@@ -141,8 +141,8 @@ int main(int argv, char* argc[])
         //----------------------------------------------------------
         // vector<fastjet::PseudoJet> inclusive_jets = sorted_by_pt( jet_selector(clust_seq.inclusive_jets()) );
         
-        // Apply only parton multiplicity cut: Np > 30
-        if (Nparton <= 30) {
+        // Apply only parton multiplicity cut: Np > 60
+        if (Nparton <= 60) {
             continue;
         }
         

@@ -107,13 +107,13 @@ cd ../
 # Save the final results into folder
 # mkdir -p results
 # mv fastjet_hadron/final_state_hard_hadrons.bin ./results/$ii.bin
-#rm -r fastjet_hadron
-#rm -r hadronization_urqmd
-#rm -r pythia_parton
-#rm -r ZPC
-#cd ../
-#rm -rf job-$ii
-#cd ../
+rm -r fastjet_hadron
+rm -r hadronization_urqmd
+rm -r pythia_parton
+rm -r ZPC
+cd ../
+rm -rf job-$ii
+cd ../
 done
 '''.format(fold_id_start=fold_id_start, nfold = nfold, nevent = nevent, random_number = random_number)
     job_name = "NSC3_%s.sh"%(fold_id_start)
