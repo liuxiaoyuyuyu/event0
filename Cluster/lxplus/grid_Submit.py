@@ -53,8 +53,9 @@ ZPC_SEED=$(({random_number} + $ii * 98765 + $1 * 17))
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
 sed "s/^53153515[[:space:]]*![[:space:]]*random seed for HIJING/$HIJING_SEED    ! random seed for HIJING/" | \\
 sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" | \\
-sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" | \
-sed "s/^2\.265d0/0.1d0/" > input_custom.ampt
+sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_custom.ampt
+#sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" | \
+#sed "s/^2\.265d0/0.1d0/" > input_custom.ampt
 
 
 # Replace the original input.ampt with our custom one (will be preserved in ana/ by exec script)
