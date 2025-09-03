@@ -357,7 +357,7 @@ int main(int argv, char* argc[])
 				int event_num;
 				iss_event >> event_num;
 				
-				if (event_num == iev) {  // Use iev instead of idx
+				if (event_num == (iev + 1)) {  // ZPC events start from 1, tree events start from 0
 					// Found our event, now read the collision count
 					while (getline(inputFile_collision, collision_line)) {
 						if (collision_line.find("number of collisions between particles =") != string::npos) {
@@ -372,7 +372,7 @@ int main(int argv, char* argc[])
 						}
 					}
 					break;
-				} else if (event_num > iev) {
+				} else if (event_num > (iev + 1)) {
 					// We've moved past our event, put the line back
 					inputFile_collision.seekg(-collision_line.length() - 1, ios::cur);
 					break;
