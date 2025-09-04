@@ -29,13 +29,13 @@ if [ ! -d "Playground" ]; then
 fi
 
 # Remove existing job directory if it exists
-if [ -d "Playground/job-$JOB_ID" ]; then
-    echo "Removing existing job-$JOB_ID directory..."
-    rm -rf Playground/job-$JOB_ID
+if [ -d "Playground/job-batch{batch_num}-$JOB_ID" ]; then
+    echo "Removing existing job-batch{batch_num}-$JOB_ID directory..."
+    rm -rf Playground/job-batch{batch_num}-$JOB_ID
 fi
 
-cp -r event0 Playground/job-$JOB_ID
-cd Playground/job-$JOB_ID
+cp -r event0 Playground/job-batch{batch_num}-$JOB_ID
+cd Playground/job-batch{batch_num}-$JOB_ID
 
 # Generate the pythia parton
 cd pythia_parton
@@ -105,7 +105,7 @@ rm -r hadronization_urqmd
 rm -r pythia_parton
 rm -r ZPC
 cd ../
-rm -rf job-$JOB_ID
+rm -rf job-batch{batch_num}-$JOB_ID
 cd ../
 '''.format(nevent=nevent, random_seed=random.randint(0, 10**6), batch_num=batch_num)
 
