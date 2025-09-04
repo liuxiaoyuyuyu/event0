@@ -28,7 +28,7 @@ void findDecayProducts(const Event& event, int particleIndex, vector<int>& decay
 int main(int argv, char* argc[])
 {
     //string random_str = string(argc[1]);
-    int Spatial_mode = 1; // 0: use the accumulant method; 1: uses the free-streaming to formation time; 
+    int Spatial_mode = 0; // 0: use the accumulant method; 1: uses the free-streaming to formation time; 
     // Set up the Pythia8 configuration.
     Pythia pythia;
     string random_str = string(argc[2]);
