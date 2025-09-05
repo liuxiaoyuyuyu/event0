@@ -302,47 +302,74 @@ int main(int argc, char* argv[])
 	inputFile_zpc >> zpc_event >> zpc_dummy >> zpc_npartons >> zpc_dummy_f >> zpc_dummy >> zpc_dummy >> zpc_dummy >> zpc_dummy;
 
 	// Read all ZPC partons for this event
+	std::vector<int> parton_pid_zpc;
+	std::vector<float> parton_px_zpc;
+	std::vector<float> parton_py_zpc;
+	std::vector<float> parton_pz_zpc;
+	std::vector<float> parton_e_zpc;
+	std::vector<float> parton_x_zpc;
+	std::vector<float> parton_y_zpc;
+	std::vector<float> parton_z_zpc;
+	std::vector<float> parton_t_zpc;
+	std::vector<int> parton_color1_zpc;
+	std::vector<int> parton_color2_zpc;
+
 	for (int i = 0; i < zpc_npartons; ++i) {
 		int pid, c1, c2;
 		float px, py, pz, mass, x, y, z, t;
 		
 		inputFile_zpc >> pid >> px >> py >> pz >> mass >> x >> y >> z >> t >> c1 >> c2;
 		
-		// Match partons by color indices and store in after_zpc vectors
+		parton_pid_zpc.push_back(pid);
+		parton_px_zpc.push_back(px);
+		parton_py_zpc.push_back(py);
+		parton_pz_zpc.push_back(pz);
+		parton_e_zpc.push_back(sqrt(px*px + py*py + pz*pz + mass*mass)); // Convert mass to energy
+		parton_x_zpc.push_back(x);
+		parton_y_zpc.push_back(y);
+		parton_z_zpc.push_back(z);
+		parton_t_zpc.push_back(t);
+		parton_color1_zpc.push_back(c1);
+		parton_color2_zpc.push_back(c2);
+	}
+
+	// First, check that we have the same number of partons before and after ZPC
+	if (parton_color1.size() != parton_color1_zpc.size()) {
+		cout << "ERROR: Mismatch in parton count - Pythia: " << parton_color1.size() 
+			 << ", ZPC: " << parton_color1_zpc.size() << " in event " << iev << endl;
+		break; // Exit the event loop
+	}
+
+	// Now loop over Pythia partons (maintaining order) and match to ZPC partons
+	for (size_t i = 0; i < parton_color1.size(); ++i) {
+		int c1_pythia = parton_color1[i];
+		int c2_pythia = parton_color2[i];
+		
+		// Find matching ZPC parton
 		bool found = false;
-		for (size_t j = 0; j < parton_color1.size(); ++j) {
-			if (parton_color1[j] == c1 && parton_color2[j] == c2) {
-				parton_pid_after_zpc.push_back(pid);
-				parton_px_after_zpc.push_back(px);
-				parton_py_after_zpc.push_back(py);
-				parton_pz_after_zpc.push_back(pz);
-				// Convert mass to energy: E = sqrt(p^2 + m^2)
-				float p2 = px*px + py*py + pz*pz;
-				parton_e_after_zpc.push_back(sqrt(p2 + mass*mass));
-				parton_x_after_zpc.push_back(x);
-				parton_y_after_zpc.push_back(y);
-				parton_z_after_zpc.push_back(z);
-				parton_t_after_zpc.push_back(t);
-				parton_color1_after_zpc.push_back(c1);
-				parton_color2_after_zpc.push_back(c2);
+		for (size_t j = 0; j < parton_color1_zpc.size(); ++j) {
+			if (parton_color1_zpc[j] == c1_pythia && parton_color2_zpc[j] == c2_pythia) {
+				// Store matched parton data in the SAME order as Pythia partons
+				parton_pid_after_zpc.push_back(parton_pid_zpc[j]);
+				parton_px_after_zpc.push_back(parton_px_zpc[j]);
+				parton_py_after_zpc.push_back(parton_py_zpc[j]);
+				parton_pz_after_zpc.push_back(parton_pz_zpc[j]);
+				parton_e_after_zpc.push_back(parton_e_zpc[j]);
+				parton_x_after_zpc.push_back(parton_x_zpc[j]);
+				parton_y_after_zpc.push_back(parton_y_zpc[j]);
+				parton_z_after_zpc.push_back(parton_z_zpc[j]);
+				parton_t_after_zpc.push_back(parton_t_zpc[j]);
+				parton_color1_after_zpc.push_back(parton_color1_zpc[j]);
+				parton_color2_after_zpc.push_back(parton_color2_zpc[j]);
 				found = true;
 				break;
 			}
 		}
 		
-		// If no match found, fill with -999
 		if (!found) {
-			parton_pid_after_zpc.push_back(-999);
-			parton_px_after_zpc.push_back(-999);
-			parton_py_after_zpc.push_back(-999);
-			parton_pz_after_zpc.push_back(-999);
-			parton_e_after_zpc.push_back(-999);
-			parton_x_after_zpc.push_back(-999);
-			parton_y_after_zpc.push_back(-999);
-			parton_z_after_zpc.push_back(-999);
-			parton_t_after_zpc.push_back(-999);
-			parton_color1_after_zpc.push_back(-999);
-			parton_color2_after_zpc.push_back(-999);
+			cout << "ERROR: Could not find matching ZPC parton for Pythia parton " << i 
+				 << " with colors (" << c1_pythia << "," << c2_pythia << ") in event " << iev << endl;
+			break; // Exit the event loop
 		}
 	}
 
