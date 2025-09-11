@@ -45,6 +45,7 @@ echo "Host: $(hostname)"
 echo "Date: $(date)"
 echo "PWD : $PWD"
 echo "Args: $@"
+echo "=== Starting job execution ==="
 
 export PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install
 export LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF
@@ -87,11 +88,14 @@ if [ -d event0 ]; then
 fi
 
 # Generate the pythia parton
+echo "=== Starting Pythia parton generation ==="
 cd pythia_parton
 ./mymain06 {nevent} $(( {random.randint(0, 10**6)} + JOB_ID * 12345 ))
+echo "=== Pythia parton generation completed ==="
 cd ../
 
 # ZPC for parton cascade
+echo "=== Starting ZPC parton cascade ==="
 cd ZPC
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
@@ -113,10 +117,12 @@ uname -n >> nohup.out
 cat start.time >> nohup.out
 rm -f start.time
 echo "#  ZPC Program finished at $(date)" >> nohup.out
+echo "=== ZPC parton cascade completed ==="
 
 cd ../
 
 # fragmentation and urqmd
+echo "=== Starting fragmentation and UrQMD ==="
 cd hadronization_urqmd
 cd fragmentation
 ln -sf ../../ZPC/ana/zpc.dat ./
@@ -138,6 +144,7 @@ cd ../
 cd ../
 
 # jet finding of final hadrons
+echo "=== Starting FastJet analysis ==="
 cd fastjet_hadron
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
@@ -145,13 +152,16 @@ ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
 ./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
+echo "=== FastJet analysis completed ==="
 cd ../
 
 # Clean up heavy directories to reduce output size
+echo "=== Cleaning up and finishing job ==="
 rm -rf fastjet_hadron hadronization_urqmd pythia_parton ZPC
 cd ../
 rm -rf "job-batch{batch_num}-$JOB_ID"
 cd ../
+echo "=== Job completed successfully ==="
 '''
 
     job_name = f"NSC3_batch{batch_num}.sh"
@@ -168,8 +178,8 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 # Ship the tarball containing your code/data
 transfer_input_files    = {TARBALL_NAME}
 
-# Environment (kept from your original)
-environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH"
+# Environment (kept from your original + terminal fixes)
+environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb; COLUMNS=80; LINES=24"
 
 # Logs stay on the submit host (AFS)
 output                  = logs/out_batch{batch_num}_$(Process).log
