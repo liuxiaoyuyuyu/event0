@@ -176,7 +176,7 @@ output                  = logs/out_batch{batch_num}_$(Process).log
 error                   = logs/err_batch{batch_num}_$(Process).log
 log                     = logs/condor_batch{batch_num}.log
 
-+MaxRuntime             = 20000
++MaxRuntime             = 200000
 queue {njobs}
 '''
     job_name2 = f"Submit_batch{batch_num}.sh"
