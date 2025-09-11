@@ -21,21 +21,24 @@ export LD_LIBRARY_PATH=$PYTHIA8/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$
 # Get the job ID from Condor (0 to N-1)
 JOB_ID=$1
 
-cd /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin
+# Set local working directory
+LOCAL_WORK_DIR="/afs/cern.ch/user/x/xiaoyul/MYDEMOANALYZER/Wenbin/Playground"
+EOS_OUTPUT_DIR="/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin"
 
-# Create Playground directory if it doesn't exist
-if [ ! -d "Playground" ]; then
-    mkdir -p Playground
+# Create local Playground directory if it doesn't exist
+if [ ! -d "$LOCAL_WORK_DIR" ]; then
+    mkdir -p $LOCAL_WORK_DIR
 fi
 
 # Remove existing job directory if it exists
-if [ -d "Playground/job-batch{batch_num}-$JOB_ID" ]; then
+if [ -d "$LOCAL_WORK_DIR/job-batch{batch_num}-$JOB_ID" ]; then
     echo "Removing existing job-batch{batch_num}-$JOB_ID directory..."
-    rm -rf Playground/job-batch{batch_num}-$JOB_ID
+    rm -rf $LOCAL_WORK_DIR/job-batch{batch_num}-$JOB_ID
 fi
 
-cp -r event0 Playground/job-batch{batch_num}-$JOB_ID
-cd Playground/job-batch{batch_num}-$JOB_ID
+# Copy event0 to local working directory
+cp -r /afs/cern.ch/user/x/xiaoyul/MYDEMOANALYZER/Wenbin/JetParton/event0 $LOCAL_WORK_DIR/job-batch{batch_num}-$JOB_ID
+cd $LOCAL_WORK_DIR/job-batch{batch_num}-$JOB_ID
 
 # Generate the pythia parton
 cd pythia_parton
@@ -99,14 +102,16 @@ ln -sf ../ZPC/ana/zpc.res ./
 ./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
 cd ../
 
-# Clean up
+# Clean up local working directory
+echo "Cleaning up local working directory..."
 rm -r fastjet_hadron
 rm -r hadronization_urqmd
 rm -r pythia_parton
 rm -r ZPC
-cd ../
+cd $LOCAL_WORK_DIR
 rm -rf job-batch{batch_num}-$JOB_ID
-cd ../
+
+echo "Job completed successfully. Output copied to EOS."
 '''.format(nevent=nevent, random_seed=random.randint(0, 10**6), batch_num=batch_num)
 
     job_name = f"NSC3_batch{batch_num}.sh"
