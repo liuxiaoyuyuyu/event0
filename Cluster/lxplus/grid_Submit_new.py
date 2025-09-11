@@ -119,7 +119,6 @@ sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      
 sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_custom.ampt
 
 cp input_custom.ampt input.ampt
-echo "#  ZPC started at $(date)" > start.time
 echo "Current directory before running ZPC exec: $(pwd)"
 echo "Files in current directory:"
 ls -la
@@ -128,9 +127,6 @@ uname -n >> nohup.out
 echo "Current directory after running ZPC exec: $(pwd)"
 echo "Files in current directory after ZPC:"
 ls -la
-cat start.time >> nohup.out
-rm -f start.time
-echo "#  ZPC Program finished at $(date)" >> nohup.out
 echo "=== ZPC parton cascade completed ==="
 
 cd ../
