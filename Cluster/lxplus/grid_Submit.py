@@ -35,7 +35,7 @@ if [ -d "Playground/job-batch{batch_num}-$JOB_ID" ]; then
     rm -rf Playground/job-batch{batch_num}-$JOB_ID
 fi
 
-cp -r /afs/cern.ch/user/x/xiaoyul/MYDEMOANALYZER/Wenbin/JetParton/event0 Playground/job-batch{batch_num}-$JOB_ID
+cp -r /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/event0 Playground/job-batch{batch_num}-$JOB_ID
 cd Playground/job-batch{batch_num}-$JOB_ID
 
 # Generate the pythia parton
