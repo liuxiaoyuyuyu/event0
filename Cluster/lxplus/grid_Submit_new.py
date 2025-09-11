@@ -92,14 +92,19 @@ fi
 
 # Generate the pythia parton
 echo "=== Starting Pythia parton generation ==="
+echo "Current directory before cd pythia_parton: $(pwd)"
 cd pythia_parton
+echo "Current directory after cd pythia_parton: $(pwd)"
 ./mymain06 {nevent} $(( {random.randint(0, 10**6)} + JOB_ID * 12345 ))
 echo "=== Pythia parton generation completed ==="
 cd ../
+echo "Current directory after cd ../: $(pwd)"
 
 # ZPC for parton cascade
 echo "=== Starting ZPC parton cascade ==="
+echo "Current directory before cd ZPC: $(pwd)"
 cd ZPC
+echo "Current directory after cd ZPC: $(pwd)"
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
 
@@ -115,19 +120,29 @@ sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_c
 
 cp input_custom.ampt input.ampt
 echo "#  ZPC started at $(date)" > start.time
+echo "Current directory before running ZPC exec: $(pwd)"
+echo "Files in current directory:"
+ls -la
 echo $HIJING_SEED | ./exec > nohup.out
 uname -n >> nohup.out
+echo "Current directory after running ZPC exec: $(pwd)"
+echo "Files in current directory after ZPC:"
+ls -la
 cat start.time >> nohup.out
 rm -f start.time
 echo "#  ZPC Program finished at $(date)" >> nohup.out
 echo "=== ZPC parton cascade completed ==="
 
 cd ../
+echo "Current directory after cd ../ from ZPC: $(pwd)"
 
 # fragmentation and urqmd
 echo "=== Starting fragmentation and UrQMD ==="
+echo "Current directory before cd hadronization_urqmd: $(pwd)"
 cd hadronization_urqmd
+echo "Current directory after cd hadronization_urqmd: $(pwd)"
 cd fragmentation
+echo "Current directory after cd fragmentation: $(pwd)"
 ln -sf ../../ZPC/ana/zpc.dat ./
 ./main_string_fragmentation {nevent}
 
@@ -148,7 +163,9 @@ cd ../
 
 # jet finding of final hadrons
 echo "=== Starting FastJet analysis ==="
+echo "Current directory before cd fastjet_hadron: $(pwd)"
 cd fastjet_hadron
+echo "Current directory after cd fastjet_hadron: $(pwd)"
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
@@ -157,6 +174,7 @@ ln -sf ../ZPC/ana/zpc.res ./
 ./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
 echo "=== FastJet analysis completed ==="
 cd ../
+echo "Current directory after cd ../ from fastjet_hadron: $(pwd)"
 
 # Clean up heavy directories to reduce output size
 echo "=== Cleaning up and finishing job ==="
