@@ -50,6 +50,9 @@ echo "=== Starting job execution ==="
 export PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install
 export LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF
 export LD_LIBRARY_PATH=$PYTHIA8/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$LD_LIBRARY_PATH
+export TERM=dumb
+export COLUMNS=80
+export LINES=24
 
 # Get the job ID from Condor (0 to N-1)
 JOB_ID=${{1:-0}}
@@ -178,8 +181,8 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 # Ship the tarball containing your code/data
 transfer_input_files    = {TARBALL_NAME}
 
-# Environment (kept from your original + terminal fixes)
-environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb; COLUMNS=80; LINES=24"
+# Environment (kept from your original)
+environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH"
 
 # Logs stay on the submit host (AFS)
 output                  = logs/out_batch{batch_num}_$(Process).log
