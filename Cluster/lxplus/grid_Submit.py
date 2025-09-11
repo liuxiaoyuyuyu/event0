@@ -21,7 +21,8 @@ export LD_LIBRARY_PATH=$PYTHIA8/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$
 # Get the job ID from Condor (0 to N-1)
 JOB_ID=$1
 
-cd /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin
+pwd 
+echo $_CONDOR_SCRATCH_DIR
 
 # Create Playground directory if it doesn't exist
 if [ ! -d "Playground" ]; then
@@ -34,7 +35,7 @@ if [ -d "Playground/job-batch{batch_num}-$JOB_ID" ]; then
     rm -rf Playground/job-batch{batch_num}-$JOB_ID
 fi
 
-cp -r event0 Playground/job-batch{batch_num}-$JOB_ID
+cp -r /afs/cern.ch/user/x/xiaoyul/MYDEMOANALYZER/Wenbin/JetParton/event0 Playground/job-batch{batch_num}-$JOB_ID
 cd Playground/job-batch{batch_num}-$JOB_ID
 
 # Generate the pythia parton
