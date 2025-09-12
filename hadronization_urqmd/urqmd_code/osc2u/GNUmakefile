@@ -6,6 +6,7 @@ osc2u.e:
 
 clean:
 	$(MAKE) -C src clean
+	rm -f osc2u.e
 
 distclean:
 	$(MAKE) -C src distclean
