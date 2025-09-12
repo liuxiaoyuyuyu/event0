@@ -95,7 +95,7 @@ echo "=== Starting Pythia parton generation ==="
 echo "Current directory before cd pythia_parton: $(pwd)"
 cd pythia_parton
 echo "Current directory after cd pythia_parton: $(pwd)"
-./mymain06 {nevent} $(( {random.randint(0, 10**6)} + JOB_ID * 12345 ))
+./mymain06 {nevent} $(( {random.randint(0, 10**6)} + $JOB_ID * 12345 ))
 echo "=== Pythia parton generation completed ==="
 cd ../
 echo "Current directory after cd ../: $(pwd)"
@@ -109,8 +109,8 @@ mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
 
 # Generate job-specific seeds for ZPC
-HIJING_SEED=$(( {random.randint(0, 10**6)} + JOB_ID * 54321 ))
-ZPC_SEED=$(( {random.randint(0, 10**6)} + JOB_ID * 98765 ))
+HIJING_SEED=$(( {random.randint(0, 10**6)} + $JOB_ID * 54321 ))
+ZPC_SEED=$(( {random.randint(0, 10**6)} + $JOB_ID * 98765 ))
 
 # Create custom input.ampt with job-specific seeds and event number
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
