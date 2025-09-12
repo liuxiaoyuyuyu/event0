@@ -127,7 +127,10 @@ echo "Checking if exec is executable:"
 ls -la exec
 echo "#  ZPC started at " `date` > start.time
 echo "Starting ZPC exec with seed: $HIJING_SEED"
-echo $HIJING_SEED | ./exec
+echo "Contents of nseed_runtime before exec:"
+cat nseed_runtime
+echo "Running exec with timeout..."
+timeout 300 bash -c "echo $HIJING_SEED | ./exec" || echo "ZPC exec timed out or failed"
 echo "ZPC exec completed"
 uname -n
 cat start.time
@@ -232,8 +235,8 @@ when_to_transfer_output = ON_EXIT_OR_EVICT
 # Ship the tarball containing your code/data
 transfer_input_files    = {TARBALL_NAME}
 
-# Environment (kept from your original)
-environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH"
+# Environment (kept from your original + terminal fix)
+environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb"
 
 # Logs stay on the submit host (AFS)
 output                  = logs/out_batch{batch_num}_$(Process).log
