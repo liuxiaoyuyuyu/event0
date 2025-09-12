@@ -628,9 +628,10 @@ c.. warning if to many hadrons are produced in string
 c.. increase the particle arrays to avoid this
 9999  WRITE(6,9998) I
 9998  FORMAT(//10X,40H...WARNING IN STRING..NPTCL TOO HIGH NPTCL=,I5)
-      WRITE(6,*) '*** CRITICAL WARNING: String fragmentation produced too many particles ***'
+      WRITE(6,*) '*** CRITICAL WARNING: String fragmentation produced'
+      WRITE(6,*) '*** too many particles ***'
       WRITE(6,*) '*** NPTCL =', I, 'exceeds MXPTCL = 2000 limit ***'
-      WRITE(6,*) '*** Skipping this string fragmentation to continue job execution ***'
+      WRITE(6,*) '*** Skipping this string fragmentation to continue ***'
       WRITE(6,*) '*** This event may have incomplete hadronization ***'
       RETURN
       END
@@ -830,11 +831,12 @@ c..z-direction (just pick the right hemisphere)
 
       RETURN
 c.. particle array to small warning:
-9999  WRITE(6,9998) I
-9998  FORMAT(//10X,40H...WARNING IN CLUSTR..NPTCL TOO HIGH NPTCL=,I5)
-      WRITE(6,*) '*** CRITICAL WARNING: Cluster fragmentation produced too many particles ***'
+9999  WRITE(6,9997) I
+9997  FORMAT(//10X,40H...WARNING IN CLUSTR..NPTCL TOO HIGH NPTCL=,I5)
+      WRITE(6,*) '*** CRITICAL WARNING: Cluster fragmentation produced'
+      WRITE(6,*) '*** too many particles ***'
       WRITE(6,*) '*** NPTCL =', I, 'exceeds MXPTCL = 2000 limit ***'
-      WRITE(6,*) '*** Skipping this cluster fragmentation to continue job execution ***'
+      WRITE(6,*) '*** Skipping this cluster fragmentation to continue ***'
       WRITE(6,*) '*** This event may have incomplete hadronization ***'
       RETURN
       END

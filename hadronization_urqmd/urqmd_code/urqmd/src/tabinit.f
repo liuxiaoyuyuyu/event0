@@ -193,10 +193,10 @@ c 66 % of all fixpoints between mintab and maxtab1
 c calculate the steps
       delta=(maxtab1-mintab)/((widnsp-1d0)*2d0/3d0)
       if (delta.le.0d0) then
-         write(*,*)'*** CRITICAL WARNING: Invalid table parameters in tabinit.f ***'
-         write(*,*)'*** maxtab1 <= mintab, which causes delta <= 0 ***'
+         write(*,*)'*** CRITICAL WARNING: Invalid table parameters ***'
+         write(*,*)'*** maxtab1 <= mintab, delta <= 0 ***'
          write(*,*)'*** maxtab1 =', maxtab1, 'mintab =', mintab
-         write(*,*)'*** Using default delta = 0.1 to continue job execution ***'
+         write(*,*)'*** Using default delta = 0.1 to continue ***'
          write(*,*)'*** This may affect cross-section calculations ***'
          delta = 0.1d0
       endif
@@ -208,10 +208,10 @@ c store the values into 'tabx'
 c 33 % of all fixpoints with larger delta between maxtab1 and maxtab2
       delta=(maxtab2-maxtab1)/((widnsp-1d0)*1d0/3d0)
       if (delta.le.0d0) then
-         write(*,*)'*** CRITICAL WARNING: Invalid table parameters in tabinit.f ***'
-         write(*,*)'*** maxtab2 <= maxtab1, which causes delta <= 0 ***'
+         write(*,*)'*** CRITICAL WARNING: Invalid table parameters ***'
+         write(*,*)'*** maxtab2 <= maxtab1, delta <= 0 ***'
          write(*,*)'*** maxtab2 =', maxtab2, 'maxtab1 =', maxtab1
-         write(*,*)'*** Using default delta = 0.1 to continue job execution ***'
+         write(*,*)'*** Using default delta = 0.1 to continue ***'
          write(*,*)'*** This may affect cross-section calculations ***'
          delta = 0.1d0
       endif

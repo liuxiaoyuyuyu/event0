@@ -123,10 +123,10 @@ c  all non strange Resonances
          i2 = maxome
       else
 c  something went wrong
-         write(6,*) '*** CRITICAL WARNING: Invalid class parameter in whichres.f ***'
-         write(6,*) '*** class =', class, 'is not a valid resonance class ***'
-         write(6,*) '*** Valid classes are 1-16 for different particle types ***'
-         write(6,*) '*** Using default range (i1=1, i2=1) to continue job execution ***'
+         write(6,*) '*** CRITICAL WARNING: Invalid class parameter ***'
+         write(6,*) '*** class =', class, 'is not valid ***'
+         write(6,*) '*** Valid classes are 1-16 ***'
+         write(6,*) '*** Using default range (i1=1, i2=1) to continue ***'
          write(6,*) '*** This may affect resonance calculations ***'
          i1 = 1
          i2 = 1
