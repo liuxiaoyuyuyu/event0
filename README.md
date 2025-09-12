@@ -100,5 +100,5 @@ e.g.\
 `python3 grid_Submit_transfer.py 1 10 0` (test)\
 `python3 grid_Submit_transfer.py 2000 100000 1`
 
-**Inportant**: Please use grid_Submit_transfer.py for large-scale production. This script uses `transfer_input_files` instead of copying event0/ from EOS at runtime. Not all worker nodes have EOS mounted, so jobs may fail to access files if you use direct cp. In addition, heavy I/O to EOS is discouraged. Similarly, never directly copy from AFS — it will slow down the server and cause the AFS volume to be temporarily marked as “offline.” 
+**Inportant**: Please use grid_Submit_transfer.py for large-scale production. This script uses `transfer_input_files` instead of copying event0/ from EOS at runtime. Not all worker nodes have EOS mounted, so jobs may fail to access files if you use direct cp. In addition, heavy I/O to EOS is discouraged. Similarly, never directly copy from AFS, it will slow down the server and cause the AFS volume to be temporarily marked as “offline.” 
 
