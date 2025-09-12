@@ -162,8 +162,20 @@ cd ../urqmd_code
     echo "Starting UrQMD processing..."
     cd osc2u
     ln -sf ../../fragmentation/hadrons_frag1.dat ./
-    ./osc2u.e < hadrons_frag1.dat
-    echo "osc2u completed"
+    echo "Checking hadrons_frag1.dat format:"
+    head -10 hadrons_frag1.dat
+    echo "File size:"
+    wc -l hadrons_frag1.dat
+    echo "Last few lines of hadrons_frag1.dat:"
+    tail -5 hadrons_frag1.dat
+    echo "Running osc2u..."
+    ./osc2u.e < hadrons_frag1.dat > run.log
+    OSC2U_EXIT_CODE=$?
+    echo "osc2u completed with exit code: $OSC2U_EXIT_CODE"
+    echo "Checking osc2u output:"
+    head -20 run.log
+    echo "Checking if fort.14 was created:"
+    ls -la fort.14
     rm -r ../../fragmentation/hadrons_frag1.dat
     mv fort.14 ../urqmd/OSCAR.input
     cd ../urqmd
