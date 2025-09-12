@@ -626,11 +626,9 @@ c.. ZI is the z coordinate
 
 c.. warning if to many hadrons are produced in string
 c.. increase the particle arrays to avoid this
-9999  WRITE(6,*) '*** CRITICAL WARNING: String fragmentation produced'
-      WRITE(6,*) '*** too many particles ***'
-      WRITE(6,*) '*** NPTCL =', I, 'exceeds MXPTCL = 2000 limit ***'
-      WRITE(6,*) '*** Skipping this string fragmentation to continue ***'
-      WRITE(6,*) '*** This event may have incomplete hadronization ***'
+9999  WRITE(6,*) '*** WARNING: String NPTCL too high ***'
+      WRITE(6,*) '*** NPTCL =', I, 'exceeds limit ***'
+      WRITE(6,*) '*** Skipping to continue ***'
       RETURN
       END
 
@@ -829,11 +827,9 @@ c..z-direction (just pick the right hemisphere)
 
       RETURN
 c.. particle array to small warning:
-9999  WRITE(6,*) '*** CRITICAL WARNING: Cluster fragmentation produced'
-      WRITE(6,*) '*** too many particles ***'
-      WRITE(6,*) '*** NPTCL =', I, 'exceeds MXPTCL = 2000 limit ***'
-      WRITE(6,*) '*** Skipping this cluster fragmentation to continue ***'
-      WRITE(6,*) '*** This event may have incomplete hadronization ***'
+9999  WRITE(6,*) '*** WARNING: Cluster NPTCL too high ***'
+      WRITE(6,*) '*** NPTCL =', I, 'exceeds limit ***'
+      WRITE(6,*) '*** Skipping to continue ***'
       RETURN
       END
 
