@@ -39,12 +39,13 @@ make install
 git clone git@github.com:liuxiaoyuyuyu/event0.git
 ``` 
 ### Tailor the codes to your own need:
-- condor job submission (`event0/Cluster/lxplus/grid_Submit.py`)
+- condor job submission (`event0/Cluster/lxplus/grid_Submit_transfer.py`)
+    - EOS_SRC_DIR = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/event0"
+    (I cloned the repo to /eos/, but later submit jobs from /afs/, you can do everything from /afs/) 
     - export PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install\
     export LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF\
     export LD_LIBRARY_PATH=$PYTHIA8/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$LD_LIBRARY_PATH
-    - cp -r /afs/cern.ch/user/x/xiaoyul/MYDEMOANALYZER/Wenbin/JetParton/event0 Playground/job-batch{batch_num}-$JOB_ID
-    - environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH"
+    - environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb"
 
 - Output file path (`fastjet_hadron/fastjet_hadron_trackTree.cc`)
     - TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch%d_%d.root", batch_number, job_id) ,"recreate");
@@ -72,14 +73,20 @@ git clone git@github.com:liuxiaoyuyuyu/event0.git
 ### Compile 
 ```
 cd event0
-cd pythia_parton 
+cd pythia_parton
+make clean  
 make 
 cd ../ZPC 
+make clean 
 make 
 cd ../hadronization_urqmd/fragmentation 
+make clean
 make 
-cd ../urqmd_code FC=gfortran make 
+cd ../urqmd_code 
+make clean 
+FC=gfortran make 
 cd ../../fastjet_hadron
+make clean 
 make
 ```
 ### Submit condor jobs 
@@ -87,10 +94,11 @@ make
 cd [dir_to_submit_jobs]
 cp [.../event0/Cluster/lxplus/grid_Submit.py] .
 mkdir logs
-python3 grid_Submit.py [N_jobs] [N_events_per_job] [batch] 
+python3 grid_Submit_transfer.py [N_jobs] [N_events_per_job] [batch] 
 ```
 e.g.\
-`python3 grid_Submit.py 1 10 0` (test)\
-`python3 grid_Submit.py 2000 100000 1`
+`python3 grid_Submit_transfer.py 1 10 0` (test)\
+`python3 grid_Submit_transfer.py 2000 100000 1`
 
+**Inportant**: Please use grid_Submit_transfer.py for large-scale production. This script uses `transfer_input_files` instead of copying event0/ from EOS at runtime. Not all worker nodes have EOS mounted, so jobs may fail to access files if you use direct cp. In addition, heavy I/O to EOS is discouraged. Similarly, never directly copy from AFS — it will slow down the server and cause the AFS volume to be temporarily marked as “offline.” 
 
