@@ -90,28 +90,29 @@ fi
 # Generate the pythia parton
 echo "=== Starting Pythia parton generation ==="
 cd pythia_parton
-echo "Current directory: $(pwd)"
-echo "Checking mymain06 executable:"
-ls -la mymain06
-echo "Environment variables:"
-echo "PYTHIA8=$PYTHIA8"
-echo "LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH"
-echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
-echo "Running mymain06 with args: {nevent} $(({random_base_seed} + $JOB_ID * 12345))"
-timeout 300 ./mymain06 {nevent} $(({random_base_seed} + $JOB_ID * 12345)) || echo "mymain06 failed or timed out"
+./mymain06 {nevent} $(({random_base_seed} + $JOB_ID * 12345))
+echo "Checking if parton_info.dat was created:"
+ls -la parton_info.dat
+echo "First few lines of parton_info.dat:"
+head -5 parton_info.dat
 echo "=== Pythia parton generation completed ==="
 cd ../
 
 # ZPC for parton cascade
+echo "=== Starting ZPC parton cascade ==="
 cd ZPC
+echo "Current directory: $(pwd)"
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
+echo "Created ana directory and linked parton_info.dat"
 
 # Generate job-specific seeds for ZPC
 HIJING_SEED=$(({random_base_seed} + $JOB_ID * 54321))
 ZPC_SEED=$(({random_base_seed} + $JOB_ID * 98765))
+echo "Generated seeds: HIJING=$HIJING_SEED, ZPC=$ZPC_SEED"
 
 # Create custom input.ampt with job-specific seeds and event number
+echo "Creating custom input.ampt..."
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
 sed "s/^53153515[[:space:]]*![[:space:]]*random seed for HIJING/$HIJING_SEED    ! random seed for HIJING/" | \\
 sed "s/^8[[:space:]]*![[:space:]]*random seed for parton cascade/$ZPC_SEED      ! random seed for parton cascade/" | \\
@@ -119,45 +120,89 @@ sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_c
 
 # Replace the original input.ampt with our custom one
 cp input_custom.ampt input.ampt
+echo "Copied custom input.ampt"
 echo "#  ZPC started at " `date` > start.time
+echo "Starting ZPC exec with seed: $HIJING_SEED"
 echo $HIJING_SEED | ./exec > nohup.out
+echo "ZPC exec completed"
 uname -n >> nohup.out
 cat start.time >> nohup.out
 rm -f start.time
 echo "#  ZPC Program finished at " `date` >> nohup.out
+echo "Checking ZPC output files:"
+ls -la ana/
+echo "First few lines of zpc.dat:"
+head -5 ana/zpc.dat
+echo "First few lines of zpc.res:"
+head -5 ana/zpc.res
+echo "=== ZPC parton cascade completed ==="
 
 cd ../
 
 # fragmentation and urqmd
+echo "=== Starting fragmentation and UrQMD ==="
 cd hadronization_urqmd
 cd fragmentation
+echo "Current directory: $(pwd)"
 ln -sf ../../ZPC/ana/zpc.dat ./
+echo "Linked zpc.dat, starting fragmentation..."
 ./main_string_fragmentation {nevent}
+echo "Fragmentation completed"
+echo "Checking fragmentation output files:"
+ls -la *.dat
+echo "First few lines of hadrons_frag1.dat:"
+head -5 hadrons_frag1.dat
+echo "First few lines of hadrons_frag_full.dat:"
+head -5 hadrons_frag_full.dat
 
 cd ../urqmd_code
     # script to run urqmd
+    echo "Starting UrQMD processing..."
     cd osc2u
+    echo "Current directory: $(pwd)"
     ln -sf ../../fragmentation/hadrons_frag1.dat ./
+    echo "Linked hadrons_frag1.dat, running osc2u..."
     ./osc2u.e < hadrons_frag1.dat > run.log
+    echo "osc2u completed"
     rm -r ../../fragmentation/hadrons_frag1.dat
     mv fort.14 ../urqmd/OSCAR.input
     cd ../urqmd
-    ./runqmd.sh > run.log
-    rm -fr OSCAR.input
-    rm -rf run.log
-    cd ..
+echo "Running UrQMD..."
+./runqmd.sh > run.log
+echo "UrQMD completed"
+echo "Checking UrQMD output files:"
+ls -la *.dat
+echo "First few lines of particle_list.dat:"
+head -5 particle_list.dat
+rm -fr OSCAR.input
+rm -rf run.log
+cd ..
 cd ../
 cd ../
+echo "=== Fragmentation and UrQMD completed ==="
 
 # jet finding of final hadrons
+echo "=== Starting FastJet analysis ==="
 cd fastjet_hadron
+echo "Current directory: $(pwd)"
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
+echo "Linked all input files, starting FastJet analysis..."
+echo "Checking input files for FastJet:"
+ls -la *.dat
+echo "First few lines of particle_list.dat:"
+head -3 particle_list.dat
+echo "First few lines of parton_info.dat:"
+head -3 parton_info.dat
 ./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
+echo "FastJet analysis completed"
+echo "Checking if ROOT output was created:"
+ls -la *.root
 cd ../
+echo "=== FastJet analysis completed ==="
 
 # Clean up
 rm -r fastjet_hadron
