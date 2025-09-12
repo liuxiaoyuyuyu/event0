@@ -136,6 +136,7 @@ cd ../urqmd_code
     rm -r ../../fragmentation/hadrons_frag1.dat
     mv fort.14 ../urqmd/OSCAR.input
     cd ../urqmd
+echo "Starting UrQMD runqmd.sh..."
 ./runqmd.sh > run.log
 echo "UrQMD completed"
 rm -fr OSCAR.input
