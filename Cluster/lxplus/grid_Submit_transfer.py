@@ -174,7 +174,7 @@ cd ../urqmd_code
     echo "Checking if osc2u is executable:"
     test -x osc2u.e && echo "YES" || echo "NO"
     echo "Running osc2u with timeout..."
-    timeout 30 ./osc2u.e < hadrons_frag1.dat > run.log
+    timeout 30 ./osc2u.e < hadrons_frag1.dat > run.log 2>/dev/null
     OSC2U_EXIT_CODE=$?
     echo "osc2u completed with exit code: $OSC2U_EXIT_CODE"
     if [ $OSC2U_EXIT_CODE -eq 124 ]; then
