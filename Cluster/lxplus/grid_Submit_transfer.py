@@ -88,8 +88,18 @@ if [ -d event0 ]; then
 fi
 
 # Generate the pythia parton
+echo "=== Starting Pythia parton generation ==="
 cd pythia_parton
-./mymain06 {nevent} $(({random_base_seed} + $JOB_ID * 12345))
+echo "Current directory: $(pwd)"
+echo "Checking mymain06 executable:"
+ls -la mymain06
+echo "Environment variables:"
+echo "PYTHIA8=$PYTHIA8"
+echo "LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH"
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+echo "Running mymain06 with args: {nevent} $(({random_base_seed} + $JOB_ID * 12345))"
+timeout 300 ./mymain06 {nevent} $(({random_base_seed} + $JOB_ID * 12345)) || echo "mymain06 failed or timed out"
+echo "=== Pythia parton generation completed ==="
 cd ../
 
 # ZPC for parton cascade
