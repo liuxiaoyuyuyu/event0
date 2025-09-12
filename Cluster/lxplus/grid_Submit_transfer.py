@@ -121,14 +121,18 @@ sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_c
 # Replace the original input.ampt with our custom one
 cp input_custom.ampt input.ampt
 echo "Copied custom input.ampt"
+echo "Checking input.ampt content:"
+head -10 input.ampt
+echo "Checking if exec is executable:"
+ls -la exec
 echo "#  ZPC started at " `date` > start.time
 echo "Starting ZPC exec with seed: $HIJING_SEED"
-echo $HIJING_SEED | ./exec > nohup.out
+echo $HIJING_SEED | ./exec
 echo "ZPC exec completed"
-uname -n >> nohup.out
-cat start.time >> nohup.out
+uname -n
+cat start.time
 rm -f start.time
-echo "#  ZPC Program finished at " `date` >> nohup.out
+echo "#  ZPC Program finished at " `date`
 echo "Checking ZPC output files:"
 ls -la ana/
 echo "First few lines of zpc.dat:"
