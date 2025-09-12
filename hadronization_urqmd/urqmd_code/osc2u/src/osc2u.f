@@ -390,7 +390,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       iret=1
       
-      read(5,*) event, npart, bimp, dummy
+      read(5,*,err=299,end=299) event, npart, bimp, dummy
 
  903  format (i10,2x,i10,2x,f8.3,2x,f8.3)
 
