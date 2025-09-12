@@ -168,10 +168,22 @@ cd ../urqmd_code
     wc -l hadrons_frag1.dat
     echo "Last few lines of hadrons_frag1.dat:"
     tail -5 hadrons_frag1.dat
-    echo "Running osc2u..."
-    ./osc2u.e < hadrons_frag1.dat > run.log
+    echo "Checking osc2u executable:"
+    ls -la osc2u.e
+    file osc2u.e
+    echo "Checking if osc2u is executable:"
+    test -x osc2u.e && echo "YES" || echo "NO"
+    echo "Running osc2u with timeout..."
+    timeout 30 ./osc2u.e < hadrons_frag1.dat > run.log
     OSC2U_EXIT_CODE=$?
     echo "osc2u completed with exit code: $OSC2U_EXIT_CODE"
+    if [ $OSC2U_EXIT_CODE -eq 124 ]; then
+        echo "osc2u timed out - it's hanging"
+    elif [ $OSC2U_EXIT_CODE -eq 0 ]; then
+        echo "osc2u completed successfully"
+    else
+        echo "osc2u failed with exit code: $OSC2U_EXIT_CODE"
+    fi
     echo "Checking osc2u output:"
     head -20 run.log
     echo "Checking if fort.14 was created:"
