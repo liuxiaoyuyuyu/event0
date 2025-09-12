@@ -125,17 +125,12 @@ echo "Checking input.ampt content:"
 head -10 input.ampt
 echo "Checking if exec is executable:"
 ls -la exec
-echo "#  ZPC started at " `date` > start.time
 echo "Starting ZPC exec with seed: $HIJING_SEED"
 echo "Contents of nseed_runtime before exec:"
 cat nseed_runtime
-echo "Running exec with timeout..."
-timeout 300 bash -c "echo $HIJING_SEED | ./exec" || echo "ZPC exec timed out or failed"
+echo "Running ZPC exec wrapper..."
+echo $HIJING_SEED | ./exec
 echo "ZPC exec completed"
-uname -n
-cat start.time
-rm -f start.time
-echo "#  ZPC Program finished at " `date`
 echo "Checking ZPC output files:"
 ls -la ana/
 echo "First few lines of zpc.dat:"
