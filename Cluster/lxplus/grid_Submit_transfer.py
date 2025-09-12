@@ -161,10 +161,8 @@ cd ../urqmd_code
     # script to run urqmd
     echo "Starting UrQMD processing..."
     cd osc2u
-    echo "Current directory: $(pwd)"
     ln -sf ../../fragmentation/hadrons_frag1.dat ./
-    echo "Linked hadrons_frag1.dat, running osc2u..."
-    ./osc2u.e < hadrons_frag1.dat > run.log
+    ./osc2u.e < hadrons_frag1.dat
     echo "osc2u completed"
     rm -r ../../fragmentation/hadrons_frag1.dat
     mv fort.14 ../urqmd/OSCAR.input
