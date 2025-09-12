@@ -2,12 +2,6 @@ c $Id: urqmd.f,v 1.25 2007/01/30 14:50:32 bleicher Exp $
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       program UrQMD
 c
-c      Disable floating-point exception halting
-      use, intrinsic :: ieee_arithmetic
-      call ieee_set_halting_mode(ieee_invalid,   .false.)
-      call ieee_set_halting_mode(ieee_underflow, .false.)
-      call ieee_set_halting_mode(ieee_denormal,  .false.)
-c
 c      Authors : The UrQMD collaboration 
 c                S.A. Bass, M. Belkacem, M. Bleicher, M. Brandstetter,
 c                L. Bravina, C. Ernst, L. Gerland, M. Hofmann, 

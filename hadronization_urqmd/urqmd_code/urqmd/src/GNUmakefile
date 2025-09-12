@@ -16,7 +16,7 @@
 
 # ----------------------------------------- 
 
-FFLAGS = -O3 -cpp
+FFLAGS = -O2 -cpp -fno-trapping-math -fno-signaling-nans
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS)
