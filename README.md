@@ -81,11 +81,13 @@ make clean
 make 
 cd ../hadronization_urqmd/fragmentation 
 make clean
-make 
+make
 cd ../urqmd_code 
 make distclean 
-FC=gfortran make 
-cd ../../fastjet_hadron
+FC=gfortran make
+cd ./osc2u
+chmod +x run_osc2u_safe.sh
+cd ../../../fastjet_hadron
 make clean 
 make
 ```
