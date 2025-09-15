@@ -3,8 +3,6 @@
 # Safe wrapper for osc2u.e that handles EOF errors gracefully
 # Usage: ./run_osc2u_safe.sh input_file
 
-set -e
-
 input_file="$1"
 if [ -z "$input_file" ]; then
     echo "Usage: $0 input_file"
@@ -26,6 +24,7 @@ echo "osc2u.e exit code: $exit_code"
 
 # Check if the error is just EOF (which is expected)
 if [ $exit_code -ne 0 ]; then
+    echo "Checking for EOF error in log..."
     if grep -q "End of file" run.log || grep -q "Fortran runtime error: End of file" run.log; then
         echo "EOF encountered - this is expected, continuing..."
         # Check if fort.14 was created successfully
@@ -38,8 +37,9 @@ if [ $exit_code -ne 0 ]; then
         fi
     else
         echo "Real error occurred, exit code: $exit_code"
-        echo "Error log:"
+        echo "Error log contents:"
         cat run.log
+        echo "End of error log"
         exit $exit_code
     fi
 else
