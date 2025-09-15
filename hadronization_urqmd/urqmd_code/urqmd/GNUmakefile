@@ -7,7 +7,6 @@ urqmd.e:
 
 clean:
 	$(MAKE) -C src clean
-	rm -f urqmd.e
 
 distclean:
 	$(MAKE) -C src distclean

@@ -16,7 +16,7 @@
 
 # ----------------------------------------- 
 
-FFLAGS = -O0 -cpp
+FFLAGS = -O3 -cpp
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS)

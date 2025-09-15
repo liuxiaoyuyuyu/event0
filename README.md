@@ -83,7 +83,7 @@ cd ../hadronization_urqmd/fragmentation
 make clean
 make 
 cd ../urqmd_code 
-make clean 
+make distclean 
 FC=gfortran make 
 cd ../../fastjet_hadron
 make clean 

@@ -35,22 +35,15 @@ int main(int argv, char* argc[])
     string output_filename2;
     string output_filename3;
     output_filename2 = "hadrons_frag1.dat";// output files of final hadrons
-    output_filename3 = "hadrons_frag_full.dat";
     cout << output_filename2 << endl;
     //string ramdomseed_str = "Random:seed = "+random_str;
     ofstream output2(output_filename2.c_str());
-    ofstream output3(output_filename3.c_str()); 
     if (!output2.is_open() ) {
         cout << "cannot open output file:"<< endl
          << output_filename2 << endl;
         return -1;
     }
-    if (!output3.is_open() ) {
-        cout << "cannot open output file:"<< endl
-         << output_filename3 << endl;
-        return -1;
-    }
-       /*
+    /*
 	output2<<"OSC1997A"<<endl;
 	output2<<"final_id_p_x"<<endl;
 	output2<<" 3DHydro       1.1  (197,    79)+(197,    79)  eqsp  0.1000E+03         1"<<endl;
@@ -141,7 +134,6 @@ int main(int argv, char* argc[])
         // Process all events, including those with 0 partons
         if (Npart==0 ) {
             output2 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; 
-            output3 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; 
             // Don't continue - process this event normally
         }
         int Nquark=0;
@@ -594,8 +586,6 @@ int main(int argv, char* argc[])
                 }
             }
         }
-        // Write to hadrons_frag_full.dat for all events
-        output3 << "         " << iEvent <<"          " << simble << "         0         0" << endl;
         // Write to hadrons_frag1.dat for all events (including 0-hadron events)
         output2 << "         " << iEvent <<"          " << simble << "         0         0" << endl;
         if (simble > 0) {
@@ -611,7 +601,7 @@ int main(int argv, char* argc[])
                         cbar_meson_energy = pythia.event[i].e();
                         double hmass = pythia.event[i].m();
                         
-                        int m1index, m2index = 0, m1col, m1acol, m2col, m2acol;
+                        int m1index = 0, m2index = 0, m1col, m1acol, m2col, m2acol;
                         m1col = pythia.event[pythia.event[i].mother1()].col();
                         m1acol = pythia.event[pythia.event[i].mother1()].acol();
                         m2col = pythia.event[pythia.event[i].mother2()].col();
@@ -703,7 +693,6 @@ int main(int argv, char* argc[])
 
 }
 output2.close();
-output3.close();
 fclose(infile1);
 
   return 0;

@@ -425,7 +425,7 @@ int main(int argc, char* argv[])
 	}
 
 	fscanf(infile, "%s %d\n", stemp1, &total_number_of_particles);
-	cout << "Event " << iev << " - total_number_of_particles: " << total_number_of_particles << endl;
+	//cout << "Event " << iev << " - total_number_of_particles: " << total_number_of_particles << endl;
 	input_particles.clear();
 	//******************START daughter particles LOOP********************************
 	for (auto i = 0; i < total_number_of_particles; i++)

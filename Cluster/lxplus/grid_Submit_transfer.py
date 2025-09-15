@@ -164,7 +164,6 @@ echo "=== Starting FastJet analysis ==="
 cd fastjet_hadron
 ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
-ln -sf ../hadronization_urqmd/fragmentation/hadrons_frag_full.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
 ./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
@@ -204,7 +203,7 @@ output                  = logs/out_batch{batch_num}_$(Process).log
 error                   = logs/err_batch{batch_num}_$(Process).log
 log                     = logs/condor_batch{batch_num}.log
 
-+MaxRuntime             = 40000
++MaxRuntime             = 100000
 queue {njobs}
 '''.format(job_name=job_name, TARBALL_NAME=TARBALL_NAME, batch_num=batch_num, njobs=njobs)
     job_name2 = f"Submit_batch{batch_num}.sh"

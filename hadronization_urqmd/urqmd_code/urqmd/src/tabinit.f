@@ -192,10 +192,10 @@ c start with 'mintab'
 c 66 % of all fixpoints between mintab and maxtab1
 c calculate the steps
       delta=(maxtab1-mintab)/((widnsp-1d0)*2d0/3d0)
-       if (delta.le.0d0) then
-          write(*,*)'maxtab1 <= mintab'
-          stop 137
-       endif
+      if (delta.le.0d0) then
+         write(*,*)'(E) Please allow maxtab1>mintab in comwid'
+         stop 137
+      endif
 c store the values into 'tabx'
       do 10 i=1,int(widnsp*2./3.)
          m=first+(i-1)*delta
@@ -203,10 +203,10 @@ c store the values into 'tabx'
  10   continue
 c 33 % of all fixpoints with larger delta between maxtab1 and maxtab2
       delta=(maxtab2-maxtab1)/((widnsp-1d0)*1d0/3d0)
-       if (delta.le.0d0) then
-          write(*,*)'maxtab2 <= maxtab1'
-          stop 137
-       endif
+      if (delta.le.0d0) then
+         write(*,*)'(E) Please allow maxtab2>maxtab1 in comwid'
+         stop 137
+      endif
 c store the values into 'tabx'
         do 11 i=int(widnsp*2./3.)+1,widnsp
          m=maxtab1+(i-1-int(widnsp*2./3.))*delta

@@ -3,10 +3,10 @@ all	: osc2u.e
 osc2u.e:
 	$(MAKE) -C src
 	cp -f src/osc2u.e ./
+	$(MAKE) -C src distclean
 
 clean:
 	$(MAKE) -C src clean
-	rm -f osc2u.e
 
 distclean:
 	$(MAKE) -C src distclean
