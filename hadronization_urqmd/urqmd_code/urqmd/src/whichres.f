@@ -121,14 +121,11 @@ c  all non strange Resonances
       else if (class.eq.16) then
          i1 = minome
          i2 = maxome
-      else
+       else
 c  something went wrong
-         write(6,*) '*** WARNING: Invalid class parameter ***'
-         write(6,*) '*** class =', class, 'not valid ***'
-         write(6,*) '*** Using default range ***'
-         i1 = 1
-         i2 = 1
-      endif
+          write(6,*) 'class =', class, 'not valid'
+          stop 137
+       endif
      
       end
 

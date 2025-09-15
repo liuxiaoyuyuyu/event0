@@ -16,7 +16,7 @@
 
 # ----------------------------------------- 
 
-FFLAGS = -O1 -cpp -fno-trapping-math -fno-signaling-nans -fno-range-check
+FFLAGS = -O0 -cpp -fno-trapping-math -fno-signaling-nans -fno-range-check -fno-fast-math
 RM		=	rm -f
 O               =       .o
 LDFLAGS         =       $(FFLAGS)

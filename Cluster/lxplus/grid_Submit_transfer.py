@@ -137,7 +137,20 @@ cd ../urqmd_code
     mv fort.14 ../urqmd/OSCAR.input
     cd ../urqmd
 echo "Starting UrQMD runqmd.sh..."
-./runqmd.sh > run.log
+echo "=== DEBUG: About to run UrQMD ==="
+echo "=== DEBUG: Current directory: $(pwd) ==="
+echo "=== DEBUG: Files in urqmd directory: ==="
+ls -la
+echo "=== DEBUG: Running UrQMD ==="
+./runqmd.sh > run.log 2>&1
+exit_code=$?
+echo "=== DEBUG: UrQMD exit code: $exit_code ==="
+if [ $exit_code -eq 137 ]; then
+    echo "*** WARNING: UrQMD stopped with exit code 137 ***"
+    echo "*** This indicates a floating-point exception ***"
+    echo "*** Checking if output files were created ***"
+    ls -la *.dat 2>/dev/null || echo "No .dat files found"
+fi
 echo "UrQMD completed"
 rm -fr OSCAR.input
 rm -rf run.log

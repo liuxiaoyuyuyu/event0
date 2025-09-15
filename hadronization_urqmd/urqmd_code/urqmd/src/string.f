@@ -626,11 +626,9 @@ c.. ZI is the z coordinate
 
 c.. warning if to many hadrons are produced in string
 c.. increase the particle arrays to avoid this
-9999  WRITE(6,*) '*** WARNING: String NPTCL too high ***'
-      WRITE(6,*) '*** NPTCL =', I, 'exceeds limit ***'
-      WRITE(6,*) '*** Skipping to continue ***'
-      RETURN
-      END
+9999  WRITE(6,*) 'NPTCL TOO HIGH'
+         STOP 137
+         END
 
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -827,10 +825,8 @@ c..z-direction (just pick the right hemisphere)
 
       RETURN
 c.. particle array to small warning:
-9999  WRITE(6,*) '*** WARNING: Cluster NPTCL too high ***'
-      WRITE(6,*) '*** NPTCL =', I, 'exceeds limit ***'
-      WRITE(6,*) '*** Skipping to continue ***'
-      RETURN
+9999  WRITE(6,*) 'NPTCL TOO HIGH'
+      STOP 137
       END
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
