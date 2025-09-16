@@ -89,14 +89,11 @@ if [ -d event0 ]; then
 fi
 
 # Generate the pythia parton
-echo "=== Starting Pythia parton generation ==="
 cd pythia_parton
 ./mymain06 {nevent} $(({random_base_seed} + $JOB_ID * 12345))
-echo "=== Pythia parton generation completed ==="
 cd ../
 
 # ZPC for parton cascade
-echo "=== Starting ZPC parton cascade ==="
 cd ZPC
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
@@ -114,44 +111,24 @@ sed "s/^10[[:space:]]*![[:space:]]*NEVNT/{nevent}            ! NEVNT/" > input_c
 # Replace the original input.ampt with our custom one
 cp input_custom.ampt input.ampt
 echo $HIJING_SEED | ./exec
-echo "=== ZPC parton cascade completed ==="
 
 cd ../
 
 # fragmentation and urqmd
-echo "=== Starting fragmentation and UrQMD ==="
 cd hadronization_urqmd
 cd fragmentation
 ln -sf ../../ZPC/ana/zpc.dat ./
 ./main_string_fragmentation {nevent}
-echo "Fragmentation completed"
 
 cd ../urqmd_code
     # script to run urqmd
-    echo "Starting UrQMD processing..."
     cd osc2u
     ln -sf ../../fragmentation/hadrons_frag1.dat ./
     ./run_osc2u_safe.sh hadrons_frag1.dat
-    echo "osc2u completed"
     rm -r ../../fragmentation/hadrons_frag1.dat
     mv fort.14 ../urqmd/OSCAR.input
     cd ../urqmd
-echo "Starting UrQMD runqmd.sh..."
-echo "=== DEBUG: About to run UrQMD ==="
-echo "=== DEBUG: Current directory: $(pwd) ==="
-echo "=== DEBUG: Files in urqmd directory: ==="
-ls -la
-echo "=== DEBUG: Running UrQMD ==="
-./runqmd.sh > run.log
-exit_code=$?
-echo "=== DEBUG: UrQMD exit code: $exit_code ==="
-if [ $exit_code -eq 137 ]; then
-    echo "*** WARNING: UrQMD stopped with exit code 137 ***"
-    echo "*** This indicates a floating-point exception ***"
-    echo "*** Checking if output files were created ***"
-    ls -la *.dat 2>/dev/null || echo "No .dat files found"
-fi
-echo "UrQMD completed"
+./runqmd.sh > run.log 2>&1
 rm -fr OSCAR.input
 rm -rf run.log
 cd ..
@@ -167,7 +144,6 @@ ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
 ./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
-echo "FastJet analysis completed"
 cd ../
 echo "=== FastJet analysis completed ==="
 
