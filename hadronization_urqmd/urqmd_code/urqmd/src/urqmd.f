@@ -87,9 +87,6 @@ c old time if an old fort.14 is used
 c check for events with 0 hadrons and handle them gracefully
       if(npart.eq.0) then
         write(6,*)"event ",event,": 0 hadrons, skipping"
-c reset collision variables that would normally be reset during decay processing
-        nct=0
-        actcol=0
         goto 324
       endif
 
