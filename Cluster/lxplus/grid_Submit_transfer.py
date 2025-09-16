@@ -142,7 +142,7 @@ echo "=== DEBUG: Current directory: $(pwd) ==="
 echo "=== DEBUG: Files in urqmd directory: ==="
 ls -la
 echo "=== DEBUG: Running UrQMD ==="
-./runqmd.sh > run.log 2>&1
+./runqmd.sh > run.log
 exit_code=$?
 echo "=== DEBUG: UrQMD exit code: $exit_code ==="
 if [ $exit_code -eq 137 ]; then
