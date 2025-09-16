@@ -204,6 +204,8 @@ error                   = logs/err_batch{batch_num}_$(Process).log
 log                     = logs/condor_batch{batch_num}.log
 
 +MaxRuntime             = 100000
+request_memory          = 8192
+request_disk            = 10485760 
 queue {njobs}
 '''.format(job_name=job_name, TARBALL_NAME=TARBALL_NAME, batch_num=batch_num, njobs=njobs)
     job_name2 = f"Submit_batch{batch_num}.sh"
