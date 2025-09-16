@@ -84,6 +84,12 @@ cbb if we are reading old events, check the success of the read-in:
 c old time if an old fort.14 is used 
       if(CTOption(40).ne.0)time=acttime
 
+c check for events with 0 hadrons and handle them gracefully
+      if(npart.eq.0) then
+        write(6,*)'event# ',event,' has 0 hadrons, skipping to next event'
+        goto 323
+      endif
+
 c output preparation
 
 c write headers to file
@@ -315,6 +321,7 @@ c     check next particle
          endif ! final decay
          CTOption(10)=CTOsave
 c final output
+323   continue
 
            if(CTOption(28).eq.2)call spectrans(otime)
 
