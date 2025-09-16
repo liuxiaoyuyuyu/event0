@@ -127,6 +127,8 @@ c now fill meson slots
  11   continue
             
 
+      write(6,*) 'DEBUG: npart_input=', npart, 'nbar_output=', nbar
+
       if(nbar.ne.npart) then
          write(0,*) 'bookkeeping error in procev!!!!'
          write(0,*) 'nbar,nmes,npart ',nbar_old,nbar-nbar_old,npart

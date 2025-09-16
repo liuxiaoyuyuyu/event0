@@ -134,6 +134,7 @@ int main(int argv, char* argc[])
         // Process all events, including those with 0 partons
         if (Npart==0 ) {
             output2 << "         " << iEvent <<"          " << 0 << "         0         0" << endl; 
+            continue;
             // Don't continue - process this event normally
         }
         int Nquark=0;
