@@ -324,7 +324,7 @@ c     check next particle
          endif ! final decay
          CTOption(10)=CTOsave
 c final output
-323   continue
+324   continue
 
            if(CTOption(28).eq.2)call spectrans(otime)
 
