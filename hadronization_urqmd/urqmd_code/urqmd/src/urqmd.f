@@ -86,7 +86,7 @@ c old time if an old fort.14 is used
 
 c check for events with 0 hadrons and handle them gracefully
       if(npart.eq.0) then
-        write(6,*)'event# ',event,' has 0 hadrons, skipping to next event'
+        write(6,*)"event ",event,": 0 hadrons, skipping"
         goto 323
       endif
 
