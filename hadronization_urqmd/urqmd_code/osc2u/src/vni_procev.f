@@ -80,6 +80,9 @@ cccccccccccccccccccccccccccccccccccccccc
 
       nbar=0
 
+      write(6,*) 'DEBUG: Input npart =', npart
+      write(6,*) 'DEBUG: Starting particle processing...'
+
       do 10 i=1,npart
 
 c convert particle ID
@@ -87,6 +90,7 @@ c convert particle ID
          call pdg2id(it,i3,pdgid)
          t_ityp(i)=it
          t_iso3(i)=i3
+         write(6,*) 'DEBUG: Particle', i, 'PDG=', pdgid, 'ityp=', it, 'iso3=', i3
 c fill baryon slots
          if(abs(t_ityp(i)).le.maxbar) then
             nbar=nbar+1
@@ -126,8 +130,6 @@ c now fill meson slots
          endif
  11   continue
             
-
-      write(6,*) 'DEBUG: npart_input=', npart, 'nbar_output=', nbar
 
       if(nbar.ne.npart) then
          write(0,*) 'bookkeeping error in procev!!!!'
