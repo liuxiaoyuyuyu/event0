@@ -548,8 +548,8 @@ int main(int argc, char* argv[])
 	bool pass_cuts = true;
 	
 	float leading_jet_pt = 0.0;
-	if (!inclusive_jets.empty()) {
-		leading_jet_pt = inclusive_jets[0].pt();
+	if (!genJetPt.empty()) {
+		leading_jet_pt = genJetPt[0];
 	}
 	
 	if (leading_jet_pt <= MIN_LEADING_JET_PT) {
