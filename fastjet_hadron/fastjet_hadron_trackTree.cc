@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <map>
+#include <sstream>
 
 //namespaces
 using namespace std;
@@ -91,6 +93,13 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    // Collision history file
+    ifstream inputFile_collision_history("ana/parton-collisionsHistory.dat");
+    if (!inputFile_collision_history.is_open()) {
+        cerr << "Error opening ana/parton-collisionsHistory.dat!" << endl;
+        return 1;
+    }
+
     int par_pdgid;
     double par_px, par_py, par_pz, par_e, par_x, par_y, par_z, par_t, mid1, mid2;
 
@@ -122,6 +131,9 @@ int main(int argc, char* argv[])
 
     // Collision count per event
     int total_collisions;
+
+    // Collision count per parton
+    std::vector<int> parton_ncol;
 
     std::vector<float> genpx;
     std::vector<float> genpy;
@@ -175,6 +187,9 @@ int main(int argc, char* argv[])
 
     // Collision count branch
     trackTree->Branch("total_collisions", &total_collisions);
+
+    // Parton collision count branch
+    trackTree->Branch("parton_ncol", &parton_ncol);
 
     trackTree->Branch("px", &genpx);
     trackTree->Branch("py", &genpy);
@@ -232,6 +247,9 @@ int main(int argc, char* argv[])
 
 	// Reset collision count
 	total_collisions = 0;
+
+	// Clear parton collision count
+	parton_ncol.clear();
 
 	genpx.clear();
 	genpy.clear();
@@ -340,38 +358,79 @@ int main(int argc, char* argv[])
 		break; // Exit the event loop
 	}
 
-	// Now loop over Pythia partons (maintaining order) and match to ZPC partons
-	for (size_t i = 0; i < parton_color1.size(); ++i) {
-		int c1_pythia = parton_color1[i];
-		int c2_pythia = parton_color2[i];
-		
-		// Find matching ZPC parton
-		bool found = false;
-		for (size_t j = 0; j < parton_color1_zpc.size(); ++j) {
-			if (parton_color1_zpc[j] == c1_pythia && parton_color2_zpc[j] == c2_pythia) {
-				// Store matched parton data in the SAME order as Pythia partons
-				parton_pid_after_zpc.push_back(parton_pid_zpc[j]);
-				parton_px_after_zpc.push_back(parton_px_zpc[j]);
-				parton_py_after_zpc.push_back(parton_py_zpc[j]);
-				parton_pz_after_zpc.push_back(parton_pz_zpc[j]);
-				parton_e_after_zpc.push_back(parton_e_zpc[j]);
-				parton_x_after_zpc.push_back(parton_x_zpc[j]);
-				parton_y_after_zpc.push_back(parton_y_zpc[j]);
-				parton_z_after_zpc.push_back(parton_z_zpc[j]);
-				parton_t_after_zpc.push_back(parton_t_zpc[j]);
-				parton_color1_after_zpc.push_back(parton_color1_zpc[j]);
-				parton_color2_after_zpc.push_back(parton_color2_zpc[j]);
-				found = true;
-				break;
-			}
-		}
-		
-		if (!found) {
-			cout << "ERROR: Could not find matching ZPC parton for Pythia parton " << i 
-				 << " with colors (" << c1_pythia << "," << c2_pythia << ") in event " << iev << endl;
-			break; // Exit the event loop
-		}
-	}
+    // Parse collision history for this event into a ZPC-indexed counter (1-based -> 0-based)
+    std::vector<int> parton_ncol_zpc;
+    parton_ncol_zpc.assign(zpc_npartons, 0);
+
+    // Parse collision history for current event
+    string collision_line;
+    while (getline(inputFile_collision_history, collision_line)) {
+        if (collision_line.find("event,miss,iscat,jscat=") != string::npos) {
+            // Parse event number and collision indices
+            istringstream iss(collision_line);
+            string dummy1, dummy2, dummy3;
+            int event_num, miss, iscat, jscat;
+            iss >> dummy1 >> dummy2 >> dummy3 >> event_num >> miss >> iscat >> jscat;
+
+            if (event_num == (iev + 1)) { // ZPC events start from 1, tree events start from 0
+                // increment counts for both runtime indices if in range (convert to 0-based)
+                if (iscat >= 1 && iscat <= zpc_npartons) parton_ncol_zpc[iscat - 1]++;
+                if (jscat >= 1 && jscat <= zpc_npartons) parton_ncol_zpc[jscat - 1]++;
+            } else if (event_num > (iev + 1)) {
+                // We've moved past our event, put the line back
+                inputFile_collision_history.seekg(-collision_line.length() - 1, ios::cur);
+                break;
+            }
+        }
+    }
+
+    // Now loop over Pythia partons (maintaining order) and match to ZPC partons
+    // Also attach per-parton collision counts using the matched ZPC index
+    for (size_t i = 0; i < parton_color1.size(); ++i) {
+        int c1_pythia = parton_color1[i];
+        int c2_pythia = parton_color2[i];
+
+        // Find matching ZPC parton
+        bool found = false;
+        for (size_t j = 0; j < parton_color1_zpc.size(); ++j) {
+            if (parton_color1_zpc[j] == c1_pythia && parton_color2_zpc[j] == c2_pythia) {
+                // Store matched parton data in the SAME order as Pythia partons
+                parton_pid_after_zpc.push_back(parton_pid_zpc[j]);
+                parton_px_after_zpc.push_back(parton_px_zpc[j]);
+                parton_py_after_zpc.push_back(parton_py_zpc[j]);
+                parton_pz_after_zpc.push_back(parton_pz_zpc[j]);
+                parton_e_after_zpc.push_back(parton_e_zpc[j]);
+                parton_x_after_zpc.push_back(parton_x_zpc[j]);
+                parton_y_after_zpc.push_back(parton_y_zpc[j]);
+                parton_z_after_zpc.push_back(parton_z_zpc[j]);
+                parton_t_after_zpc.push_back(parton_t_zpc[j]);
+                parton_color1_after_zpc.push_back(parton_color1_zpc[j]);
+                parton_color2_after_zpc.push_back(parton_color2_zpc[j]);
+
+                // Attach collision count aligned to Pythia order
+                int ncol = (j < parton_ncol_zpc.size()) ? parton_ncol_zpc[j] : 0;
+                parton_ncol.push_back(ncol);
+
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            cout << "ERROR: Could not find matching ZPC parton for Pythia parton " << i 
+                 << " with colors (" << c1_pythia << "," << c2_pythia << ") in event " << iev << endl;
+            break; // Exit the event loop
+        }
+    }
+
+    // Debug output for first few events
+    if (iev < 3) {
+        int total_partons_with_collisions = 0;
+        for (size_t i = 0; i < parton_ncol.size(); ++i) {
+            if (parton_ncol[i] > 0) total_partons_with_collisions++;
+        }
+        cout << "Event " << iev << ": " << total_partons_with_collisions << " out of " << parton_ncol.size() << " partons had collisions" << endl;
+    }
 
 	// Collision count stuff - Read collision count for this event
 	
@@ -569,6 +628,7 @@ int main(int argc, char* argv[])
 	inputFile_p.close();
 	inputFile_zpc.close();
 	inputFile_collision.close();
+	inputFile_collision_history.close();
     // Use both Condor Process ID and Job ID for general usage
     TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch%d_%d.root", batch_number, job_id) ,"recreate");
 	trackTree->Write();
