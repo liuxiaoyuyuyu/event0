@@ -30,15 +30,22 @@ int main(int argc, char* argv[])
     gInterpreter->GenerateDictionary("vector<vector<float> >", "vector");
     gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
 
-    if (argc != 4) {
-        cout << "Usage: " << argv[0] << " <nevent> <job_id> <batch_number>" << endl;
+    if (argc < 4 || argc > 5) {
+        cout << "Usage: " << argv[0] << " <nevent> <job_id> <batch_number> [output_path]" << endl;
         cout << "Example: " << argv[0] << " 50000 0 0" << endl;
+        cout << "Example: " << argv[0] << " 50000 0 0 /custom/path/prefix" << endl;
         return 1;
     }
 
     int Nevent = atoi(argv[1]);
     int job_id = atoi(argv[2]);             // This is the job ID (0 to N-1)
     int batch_number = atoi(argv[3]);       // Batch number for unique output names
+    
+    // Handle optional output path
+    string output_path = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade";
+    if (argc == 5) {
+        output_path = string(argv[4]);
+    }
     // selection for final particles which are used to reconstruct jet
     double absetamax = 2.4;
     // parameter setting
@@ -94,9 +101,9 @@ int main(int argc, char* argv[])
     }
 
     // Collision history file
-    ifstream inputFile_collision_history("ana/parton-collisionsHistory.dat");
+    ifstream inputFile_collision_history("parton-collisionsHistory.dat");
     if (!inputFile_collision_history.is_open()) {
-        cerr << "Error opening ana/parton-collisionsHistory.dat!" << endl;
+        cerr << "Error opening parton-collisionsHistory.dat!" << endl;
         return 1;
     }
 
@@ -630,7 +637,7 @@ int main(int argc, char* argv[])
 	inputFile_collision.close();
 	inputFile_collision_history.close();
     // Use both Condor Process ID and Job ID for general usage
-    TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch%d_%d.root", batch_number, job_id) ,"recreate");
+    TFile * fout = TFile::Open( Form("%s_batch%d_%d.root", output_path.c_str(), batch_number, job_id) ,"recreate");
 	trackTree->Write();
     fout->Close();
     

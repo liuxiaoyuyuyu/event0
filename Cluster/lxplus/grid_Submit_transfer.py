@@ -31,13 +31,20 @@ def ensure_tarball(eos_src=EOS_SRC_DIR, tarball=TARBALL_NAME):
     base = os.path.basename(eos_src.rstrip("/"))
     check_call(["tar", "-C", parent, "-czf", tarball, base])
 
-def submit(njobs=1, nevent=10, batch_num=0):
+def submit(njobs=1, nevent=10, batch_num=0, output_path=None):
     # Make sure logs/ exists
     if not os.path.exists('logs'):
         os.makedirs('logs')
 
     # Generate a random base seed for this batch
     random_base_seed = random.randint(0, 10**6)
+
+    # Set default output path if not provided
+    if output_path is None:
+        output_path = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade"
+    
+    # Prepare output path argument for the job script
+    output_path_arg = output_path if output_path else ""
 
     # Ensure tarball exists before we submit
     ensure_tarball()
@@ -143,7 +150,8 @@ ln -sf ../hadronization_urqmd/urqmd_code/urqmd/particle_list.dat ./
 ln -sf ../pythia_parton/parton_info.dat ./
 ln -sf ../ZPC/ana/zpc.dat ./
 ln -sf ../ZPC/ana/zpc.res ./
-./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num}
+ln -sf ../ZPC/ana/parton-collisionsHistory.dat ./
+./fastjet_hadron_trackTree {nevent} $JOB_ID {batch_num} {output_path_arg}
 cd ../
 echo "=== FastJet analysis completed ==="
 
@@ -155,7 +163,7 @@ rm -r ZPC
 cd ../
 rm -rf job-batch{batch_num}-$JOB_ID
 cd ../
-'''.format(nevent=nevent, random_base_seed=random_base_seed, batch_num=batch_num, TARBALL_NAME=TARBALL_NAME)
+'''.format(nevent=nevent, random_base_seed=random_base_seed, batch_num=batch_num, TARBALL_NAME=TARBALL_NAME, output_path_arg=output_path_arg)
 
     job_name = f"NSC3_batch{batch_num}.sh"
     with open(job_name, 'w') as fout:
@@ -196,15 +204,18 @@ queue {njobs}
     call(['condor_submit', job_name2])
 
 if __name__=='__main__':
-    if len(sys.argv) != 4:
-        print("Usage: python3 grid_Submit_transfer.py <N_jobs> <events_per_job> <batch_number>")
+    if len(sys.argv) < 4 or len(sys.argv) > 5:
+        print("Usage: python3 grid_Submit_transfer.py <N_jobs> <events_per_job> <batch_number> [output_path]")
         print("Example: python3 grid_Submit_transfer.py 100 50000 0")
-        print("Example: python3 grid_Submit_transfer.py 100 50000 1")
+        print("Example: python3 grid_Submit_transfer.py 100 50000 1 /custom/path/prefix")
         sys.exit(1)
 
     njobs = int(sys.argv[1])      # Number of jobs (0 to N-1)
     nevent = int(sys.argv[2])     # Events per job
     batch_num = int(sys.argv[3])  # Batch number for unique output names
+    output_path = sys.argv[4] if len(sys.argv) == 5 else None  # Optional output path
 
     print(f"Submitting batch {batch_num}: {njobs} jobs with {nevent} events each")
-    submit(njobs, nevent, batch_num)
+    if output_path:
+        print(f"Output path: {output_path}")
+    submit(njobs, nevent, batch_num, output_path)

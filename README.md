@@ -48,7 +48,8 @@ git clone git@github.com:liuxiaoyuyuyu/event0.git
     - environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb"
 
 - Output file path (`fastjet_hadron/fastjet_hadron_trackTree.cc`)
-    - TFile * fout = TFile::Open( Form("/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch%d_%d.root", batch_number, job_id) ,"recreate");
+    - Default: `/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch%d_%d.root`
+    - Can be customized via command line argument or submission script
 
 - Paths to Pythia and fastjet in Makefile
     - pythia_parton/Makefile
@@ -94,13 +95,27 @@ make
 ### Submit condor jobs 
 ```
 cd [dir_to_submit_jobs]
-cp [.../event0/Cluster/lxplus/grid_Submit.py] .
+cp [.../event0/Cluster/lxplus/grid_Submit_transfer.py] .
 mkdir logs
-python3 grid_Submit_transfer.py [N_jobs] [N_events_per_job] [batch] 
+python3 grid_Submit_transfer.py [N_jobs] [N_events_per_job] [batch] [output_path]
 ```
-e.g.\
-`python3 grid_Submit_transfer.py 1 10 0` (test)\
-`python3 grid_Submit_transfer.py 2000 100000 1`
+**Usage:**
+- Default 
+```
+python3 grid_Submit_transfer.py 100 500000 0 
+# Output: /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch0_*.root
+```
+- Custom output path 
+```
+python3 grid_Submit_transfer.py 100 500000 0 /output_path/output_name_prefix
+# Output: /output_path/output_name_prefix_batch0_*.root
+```
+- Local testing 
+```
+python3 grid_Submit_transfer.py 1 100 0 ./test_output
+# Output: ./test_output_batch0_0.root
+```
+
 
 **Inportant**: Please use grid_Submit_transfer.py for large-scale production. This script uses `transfer_input_files` instead of copying event0/ from EOS at runtime. Not all worker nodes have EOS mounted, so jobs may fail to access files if you use direct cp. In addition, heavy I/O to EOS is discouraged. Similarly, never directly copy from AFS, it will slow down the server and cause the AFS volume to be temporarily marked as “offline.” 
 
