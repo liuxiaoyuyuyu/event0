@@ -442,28 +442,28 @@ int main(int argc, char* argv[])
 	// Collision count stuff - Read collision count for this event
 	
 	// Read collision count from zpc.res for this event
-	string collision_line;
+	string zpc_res_line;
 	total_collisions = 0;
 	
-	while (getline(inputFile_collision, collision_line)) {
-		if (collision_line.find("Event") != string::npos && collision_line.find("run") != string::npos) {
+	while (getline(inputFile_collision, zpc_res_line)) {
+		if (zpc_res_line.find("Event") != string::npos && zpc_res_line.find("run") != string::npos) {
 			// Parse event number from "Event X, run Y"
-			size_t pos1 = collision_line.find("Event");
-			size_t pos2 = collision_line.find(",");
+			size_t pos1 = zpc_res_line.find("Event");
+			size_t pos2 = zpc_res_line.find(",");
 			if (pos1 != string::npos && pos2 != string::npos) {
-				string event_str = collision_line.substr(pos1 + 5, pos2 - pos1 - 5);
+				string event_str = zpc_res_line.substr(pos1 + 5, pos2 - pos1 - 5);
 				istringstream iss_event(event_str);
 				int event_num;
 				iss_event >> event_num;
 				
 				if (event_num == (iev + 1)) {  // ZPC events start from 1, tree events start from 0
 					// Found our event, now read the collision count
-					while (getline(inputFile_collision, collision_line)) {
-						if (collision_line.find("number of collisions between particles =") != string::npos) {
+					while (getline(inputFile_collision, zpc_res_line)) {
+						if (zpc_res_line.find("number of collisions between particles =") != string::npos) {
 							// Parse collision count
-							size_t pos = collision_line.find("=");
+							size_t pos = zpc_res_line.find("=");
 							if (pos != string::npos) {
-								string count_str = collision_line.substr(pos + 1);
+								string count_str = zpc_res_line.substr(pos + 1);
 								istringstream iss_count(count_str);
 								iss_count >> total_collisions;
 								break;
@@ -473,7 +473,7 @@ int main(int argc, char* argv[])
 					break;
 				} else if (event_num > (iev + 1)) {
 					// We've moved past our event, put the line back
-					inputFile_collision.seekg(-collision_line.length() - 1, ios::cur);
+					inputFile_collision.seekg(-zpc_res_line.length() - 1, ios::cur);
 					break;
 				}
 			}
