@@ -63,7 +63,8 @@ int main(int argc, char* argv[])
     // Individual jet cuts
     const double MIN_JET_PT = 500.0;  // GeV
     const double MAX_JET_ETA = 2.5;
-    const int MIN_JET_CHARGED_MULTIPLICITY = 60;  // At least 1 charged particle
+    //const int MIN_JET_CHARGED_MULTIPLICITY = 60;  // At least 1 charged particle
+    const int MIN_JET_CHARGED_MULTIPLICITY = 1;  // for testing: at least 1 charged particle
     vector<fastjet::PseudoJet> input_particles;
     char inputfile[128];
     sprintf(inputfile, "particle_list.dat");
@@ -369,27 +370,30 @@ int main(int argc, char* argv[])
     std::vector<int> parton_ncol_zpc;
     parton_ncol_zpc.assign(zpc_npartons, 0);
 
-    // Parse collision history for current event
-    string collision_line;
-    while (getline(inputFile_collision_history, collision_line)) {
-        if (collision_line.find("event,miss,iscat,jscat=") != string::npos) {
-            // Parse event number and collision indices
-            istringstream iss(collision_line);
-            string dummy1, dummy2, dummy3;
-            int event_num, miss, iscat, jscat;
-            iss >> dummy1 >> dummy2 >> dummy3 >> event_num >> miss >> iscat >> jscat;
+	// Parse collision history for current event
+	string collision_line;
+	while (getline(inputFile_collision_history, collision_line)) {
+		if (collision_line.find("event,miss,iscat,jscat=") != string::npos) {
+			// Parse event number and collision indices
+			// Format: " event,miss,iscat,jscat=           1           0          51          35"
+			size_t eq_pos = collision_line.find("=");
+			if (eq_pos != string::npos) {
+				istringstream iss(collision_line.substr(eq_pos + 1));
+				int event_num, miss, iscat, jscat;
+				iss >> event_num >> miss >> iscat >> jscat;
 
-            if (event_num == (iev + 1)) { // ZPC events start from 1, tree events start from 0
-                // increment counts for both runtime indices if in range (convert to 0-based)
-                if (iscat >= 1 && iscat <= zpc_npartons) parton_ncol_zpc[iscat - 1]++;
-                if (jscat >= 1 && jscat <= zpc_npartons) parton_ncol_zpc[jscat - 1]++;
-            } else if (event_num > (iev + 1)) {
-                // We've moved past our event, put the line back
-                inputFile_collision_history.seekg(-collision_line.length() - 1, ios::cur);
-                break;
-            }
-        }
-    }
+				if (event_num == (iev + 1)) { // ZPC events start from 1, tree events start from 0
+					// increment counts for both runtime indices if in range (convert to 0-based)
+					if (iscat >= 1 && iscat <= zpc_npartons) parton_ncol_zpc[iscat - 1]++;
+					if (jscat >= 1 && jscat <= zpc_npartons) parton_ncol_zpc[jscat - 1]++;
+				} else if (event_num > (iev + 1)) {
+					// We've moved past our event, put the line back
+					inputFile_collision_history.seekg(-collision_line.length() - 1, ios::cur);
+					break;
+				}
+			}
+		}
+	}
 
     // Now loop over Pythia partons (maintaining order) and match to ZPC partons
     // Also attach per-parton collision counts using the matched ZPC index
