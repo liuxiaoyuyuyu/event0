@@ -61,9 +61,9 @@ int main(int argc, char* argv[])
     const double MIN_LEADING_JET_PT = 500.0;  // GeV
     
     // Individual jet cuts
-    const double MIN_JET_PT = 20.0;  // GeV
+    const double MIN_JET_PT = 500.0;  // GeV
     const double MAX_JET_ETA = 2.5;
-    const int MIN_JET_CHARGED_MULTIPLICITY = 1;  // At least 1 charged particle
+    const int MIN_JET_CHARGED_MULTIPLICITY = 60;  // At least 1 charged particle
     vector<fastjet::PseudoJet> input_particles;
     char inputfile[128];
     sprintf(inputfile, "particle_list.dat");
