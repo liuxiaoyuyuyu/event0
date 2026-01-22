@@ -562,7 +562,7 @@ int main(int argc, char* argv[])
 		{
 			if (particleData.charge(constituents[j].user_index()))
 			{
-				if (fabs(constituents[j].pt) < particle_ptmin) continue;
+				if (fabs(constituents[j].pt()) < particle_ptmin) continue;
 				if (fabs(constituents[j].eta()) > absetamax) continue;
 				int pid = constituents[j].user_index();
 				if (!(abs(pid)==211 || abs(pid) == 321 || abs(pid) == 2212)) continue;
