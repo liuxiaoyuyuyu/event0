@@ -7,11 +7,14 @@ import sys
 import random
 import time
 import os
+import argparse
 
 EOS_SRC_DIR = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/event0"  # directory on EOS to ship
-TARBALL_NAME = "event0.tgz"  # tarball we'll create locally and transfer
+DEFAULT_TARBALL = "event0.tgz"
+DEFAULT_OUTPUT_DIR = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample"
+DEFAULT_OUTPUT_PREFIX = "pp_parton_cascade"
 
-def ensure_tarball(eos_src=EOS_SRC_DIR, tarball=TARBALL_NAME):
+def ensure_tarball(eos_src=EOS_SRC_DIR, tarball=DEFAULT_TARBALL):
     """
     Create a tarball from the EOS source directory on the submit host.
     The submit host (AFS/lxplus) can see /eos; the worker nodes might not.
@@ -31,7 +34,7 @@ def ensure_tarball(eos_src=EOS_SRC_DIR, tarball=TARBALL_NAME):
     base = os.path.basename(eos_src.rstrip("/"))
     check_call(["tar", "-C", parent, "-czf", tarball, base])
 
-def submit(njobs=1, nevent=10, batch_num=0, output_path=None):
+def submit(njobs=1, nevent=10, batch_num=0, output_dir=None, output_prefix=None, tarball_name=DEFAULT_TARBALL):
     # Make sure logs/ exists
     if not os.path.exists('logs'):
         os.makedirs('logs')
@@ -39,15 +42,20 @@ def submit(njobs=1, nevent=10, batch_num=0, output_path=None):
     # Generate a random base seed for this batch
     random_base_seed = random.randint(0, 10**6)
 
-    # Set default output path if not provided
-    if output_path is None:
-        output_path = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade"
-    
-    # Prepare output path argument for the job script
-    output_path_arg = output_path if output_path else ""
+    # Set defaults for output directory and prefix
+    if output_dir is None:
+        output_dir = DEFAULT_OUTPUT_DIR
+    if output_prefix is None:
+        output_prefix = DEFAULT_OUTPUT_PREFIX
+
+    # Create output directory if it does not exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Full output base passed to fastjet_hadron_trackTree: dir/prefix -> dir/prefix_batchN_JOBID.root
+    output_path_arg = os.path.join(output_dir, output_prefix)
 
     # Ensure tarball exists before we submit
-    ensure_tarball()
+    ensure_tarball(tarball=tarball_name)
 
     jobs = '''#!/bin/bash
 set -euo pipefail
@@ -77,12 +85,12 @@ fi
 # Prepare job work area
 mkdir -p "Playground/job-batch{batch_num}-$JOB_ID"
 
-# Unpack shipped code (event0.tgz) into the job directory
-if [ ! -f "{TARBALL_NAME}" ]; then
-    echo "FATAL: missing {TARBALL_NAME} in working dir"; ls -la; exit 99
+# Unpack shipped code (tarball) into the job directory
+if [ ! -f "{tarball_name}" ]; then
+    echo "FATAL: missing {tarball_name} in working dir"; ls -la; exit 99
 fi
 
-tar -xzf {TARBALL_NAME} -C "Playground/job-batch{batch_num}-$JOB_ID"
+tar -xzf {tarball_name} -C "Playground/job-batch{batch_num}-$JOB_ID"
 
 cd "Playground/job-batch{batch_num}-$JOB_ID"
 
@@ -163,7 +171,7 @@ rm -r ZPC
 cd ../
 rm -rf job-batch{batch_num}-$JOB_ID
 cd ../
-'''.format(nevent=nevent, random_base_seed=random_base_seed, batch_num=batch_num, TARBALL_NAME=TARBALL_NAME, output_path_arg=output_path_arg)
+'''.format(nevent=nevent, random_base_seed=random_base_seed, batch_num=batch_num, tarball_name=tarball_name, output_path_arg=output_path_arg)
 
     job_name = f"NSC3_batch{batch_num}.sh"
     with open(job_name, 'w') as fout:
@@ -177,7 +185,7 @@ arguments               = $(Process)
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
 # Ship the tarball containing your code/data
-transfer_input_files    = {TARBALL_NAME}
+transfer_input_files    = {tarball_name}
 
 # Environment (kept from your original + terminal fix)
          environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb"
@@ -191,7 +199,7 @@ log                     = logs/condor_batch{batch_num}.log
 request_memory          = 8192
 request_disk            = 10485760 
 queue {njobs}
-'''.format(job_name=job_name, TARBALL_NAME=TARBALL_NAME, batch_num=batch_num, njobs=njobs)
+'''.format(job_name=job_name, tarball_name=tarball_name, batch_num=batch_num, njobs=njobs)
     job_name2 = f"Submit_batch{batch_num}.sh"
     with open(job_name2, 'w') as fout:
         fout.write(condor_submit)
@@ -204,18 +212,30 @@ queue {njobs}
     call(['condor_submit', job_name2])
 
 if __name__=='__main__':
-    if len(sys.argv) < 4 or len(sys.argv) > 5:
-        print("Usage: python3 grid_Submit_transfer.py <N_jobs> <events_per_job> <batch_number> [output_path]")
-        print("Example: python3 grid_Submit_transfer.py 100 50000 0")
-        print("Example: python3 grid_Submit_transfer.py 100 50000 1 /custom/path/prefix")
-        sys.exit(1)
+    ap = argparse.ArgumentParser(
+        description="Submit HTCondor jobs with transferred tarball.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    ap.add_argument("N_jobs", type=int, help="Number of jobs to submit")
+    ap.add_argument("events_per_job", type=int, help="Events per job")
+    ap.add_argument("batch_number", type=int, help="Batch number for unique output names")
+    ap.add_argument("--tarball", "-t", type=str, default=DEFAULT_TARBALL,
+                    help="Tarball name to create and transfer (e.g. event0.tgz)")
+    ap.add_argument("--output-dir", "-d", type=str, default=DEFAULT_OUTPUT_DIR,
+                    help="Output directory for root files (created if missing)")
+    ap.add_argument("--output-prefix", "-p", type=str, default=DEFAULT_OUTPUT_PREFIX,
+                    help="Output file name prefix (files: <prefix>_batch<N>_<jobid>.root)")
+    args = ap.parse_args()
 
-    njobs = int(sys.argv[1])      # Number of jobs (0 to N-1)
-    nevent = int(sys.argv[2])     # Events per job
-    batch_num = int(sys.argv[3])  # Batch number for unique output names
-    output_path = sys.argv[4] if len(sys.argv) == 5 else None  # Optional output path
+    njobs = args.N_jobs
+    nevent = args.events_per_job
+    batch_num = args.batch_number
+    tarball_name = args.tarball
+    output_dir = args.output_dir
+    output_prefix = args.output_prefix
 
     print(f"Submitting batch {batch_num}: {njobs} jobs with {nevent} events each")
-    if output_path:
-        print(f"Output path: {output_path}")
-    submit(njobs, nevent, batch_num, output_path)
+    print(f"Tarball: {tarball_name}")
+    print(f"Output dir: {output_dir} (created if missing)")
+    print(f"Output prefix: {output_prefix}")
+    submit(njobs, nevent, batch_num, output_dir=output_dir, output_prefix=output_prefix, tarball_name=tarball_name)

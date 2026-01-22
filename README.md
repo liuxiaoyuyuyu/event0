@@ -93,29 +93,27 @@ make clean
 make
 ```
 ### Submit condor jobs 
-```
+```bash
 cd [dir_to_submit_jobs]
 cp [.../event0/Cluster/lxplus/grid_Submit_transfer.py] .
 mkdir logs
-python3 grid_Submit_transfer.py [N_jobs] [N_events_per_job] [batch] [output_path]
-```
-**Usage:**
-- Default 
-```
-python3 grid_Submit_transfer.py 100 500000 0 
-# Output: /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/pp_parton_cascade_batch0_*.root
-```
-- Custom output path 
-```
-python3 grid_Submit_transfer.py 100 500000 0 /output_path/output_name_prefix
-# Output: /output_path/output_name_prefix_batch0_*.root
-```
-- Local testing 
-```
-python3 grid_Submit_transfer.py 1 100 0 ./test_output
-# Output: ./test_output_batch0_0.root
+python3 grid_Submit_transfer.py N_jobs events_per_job batch_number [--tarball TARBALL] [--output-dir DIR] [--output-prefix PREFIX]
 ```
 
+**Usage:**
+```bash
+# Defaults: tarball event0.tgz, output dir/prefix as in script
+python3 grid_Submit_transfer.py 100 500000 0
+
+# Custom tarball, output dir, and file prefix (output dir created if missing)
+python3 grid_Submit_transfer.py 100 500000 0 -t mycode.tgz -d /eos/.../my_run -p my_run
+# Output: /eos/.../my_run/my_run_batch0_*.root
+
+# Short flags
+python3 grid_Submit_transfer.py 1 100 0 -t event0.tgz -d ./test_out -p test
+# Output: ./test_out/test_batch0_0.root
+```
+`python3 grid_Submit_transfer.py --help` for full options.
 
 **Inportant**: Please use grid_Submit_transfer.py for large-scale production. This script uses `transfer_input_files` instead of copying event0/ from EOS at runtime. Not all worker nodes have EOS mounted, so jobs may fail to access files if you use direct cp. In addition, heavy I/O to EOS is discouraged. Similarly, never directly copy from AFS, it will slow down the server and cause the AFS volume to be temporarily marked as “offline.” 
 
