@@ -97,21 +97,36 @@ make
 cd [dir_to_submit_jobs]
 cp [.../event0/Cluster/lxplus/grid_Submit_transfer.py] .
 mkdir logs
-python3 grid_Submit_transfer.py N_jobs events_per_job batch_number [--tarball TARBALL] [--output-dir DIR] [--output-prefix PREFIX]
+python3 grid_Submit_transfer.py N_jobs events_per_job batch_number [--tarball TARBALL] [--output-dir DIR] [--output-prefix PREFIX] [--seed-mode MODE]
 ```
 
-**Usage:**
+- **Seed mode** (`-s` / `--seed-mode`): `1` = random base + job id (default); `2` = deterministic hash(batch_number, job_id) so same batch+job gives the same seed; seeds are scattered (not sequential) to avoid RNG correlations.
+
+**How seeds are set (per job):**  
+Each job gets a **job id** = 0, 1, …, N_jobs−1 (Condor `$(Process)`).
+
+- **Mode 1 (random):** At submit time the script draws a random base (0,10^9) and sets **effective_base** = random_base + batch_number × 400000. In the job:
+  - **Pythia** seed = effective_base + job_id × **12345**
+  - **HIJING** seed = effective_base + job_id × **54321**
+  - **ZPC** seed = effective_base + job_id × **98765**  
+  So each job has a different seed; resubmitting the same batch gives new random bases and thus new parton samples.
+
+- **Mode 2 (deterministic, fixed partons):** Seeds depend only on (batch_number, job_id), no random draw. In the job:
+  - **BASE** = (batch_number × **1000003** + job_id × **100003**) mod **2147483647**  (hash so seeds are scattered; 2147483647 = 2^31−1)
+  - **Pythia** seed = BASE + 1
+  - **HIJING** seed = (BASE + **100000007**) mod 2147483647 + 1
+  - **ZPC** seed = (BASE + **200000007**) mod 2147483647 + 1  
+  Same (batch_number, job_id) ⇒ same seeds ⇒ same Pythia partons; different (batch_number, job_id) ⇒ well-scattered seeds. Multipliers chosen so the sum fits in 32-bit for thousands of jobs.
+
+**Usage example:**
 ```bash
-# Defaults: tarball event0.tgz, output dir/prefix as in script
-python3 grid_Submit_transfer.py 100 500000 0
+#2000 job with 0.1M events per job, batch 0;
+#-t set the tarball name;
+#-d set the output file path (create the directory if it doesn't exist);
+#-p set the output file prefix; 
+#-s set the random seed mode.
 
-# Custom tarball, output dir, and file prefix (output dir created if missing)
-python3 grid_Submit_transfer.py 100 500000 0 -t mycode.tgz -d /eos/.../my_run -p my_run
-# Output: /eos/.../my_run/my_run_batch0_*.root
-
-# Short flags
-python3 grid_Submit_transfer.py 1 100 0 -t event0.tgz -d ./test_out -p test
-# Output: ./test_out/test_batch0_0.root
+python3 grid_Submit_transfer.py 2000 100000 0 -t event0_0mb.tgz -d /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/wenbin_cuts/0mb/batch0 -p pp_parton_cascade_0mb -s 2 
 ```
 `python3 grid_Submit_transfer.py --help` for full options.
 

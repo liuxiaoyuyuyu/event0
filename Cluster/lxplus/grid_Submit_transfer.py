@@ -34,13 +34,20 @@ def ensure_tarball(eos_src=EOS_SRC_DIR, tarball=DEFAULT_TARBALL):
     base = os.path.basename(eos_src.rstrip("/"))
     check_call(["tar", "-C", parent, "-czf", tarball, base])
 
-def submit(njobs=1, nevent=10, batch_num=0, output_dir=None, output_prefix=None, tarball_name=DEFAULT_TARBALL):
+def submit(njobs=1, nevent=10, batch_num=0, output_dir=None, output_prefix=None, tarball_name=DEFAULT_TARBALL, seed_mode=1):
+    # batch_num: typically 0-10 (tens of batches). JOB_ID in the job script is Condor $(Process), i.e. 0 to njobs-1.
+    # seed_mode: 1 = random base + JOB_ID (different each submission); 2 = deterministic(batch_num, JOB_ID) for fixed Pythia partons across rescattering scenarios
     # Make sure logs/ exists
     if not os.path.exists('logs'):
         os.makedirs('logs')
 
-    # Generate a random base seed for this batch
-    random_base_seed = random.randint(0, 10**6)
+    if seed_mode == 1:
+        # Option 1: random_base_seed + job_id * ... (new random base per submission)
+        random_base_seed = random.randint(0, 10**9)
+        effective_base = random_base_seed + batch_num * 400000  # safe for 2000+ batches, keep < 2^31
+    else:
+        # Option 2: seeds from (batch_num, job_id) only; effective_base unused in script
+        effective_base = 0
 
     # Set defaults for output directory and prefix
     if output_dir is None:
@@ -67,7 +74,7 @@ export PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install
 export LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF
 export LD_LIBRARY_PATH=$PYTHIA8/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$LD_LIBRARY_PATH
 
-# Get the job ID from Condor (0 to N-1)
+# Job ID: Condor passes $(Process) as first argument, so JOB_ID = 0, 1, ..., N_jobs-1
 JOB_ID=$1
 
 pwd
@@ -103,19 +110,28 @@ if [ -d event0 ]; then
     shopt -u dotglob || true
 fi
 
+# Seeds: mode 1 = random_base + JOB_ID (per submission); mode 2 = deterministic hash(batch_num, JOB_ID), same batch+job => same Pythia partons, seeds scattered (not sequential)
+if [ {seed_mode} -eq 1 ]; then
+  PYTHIA_SEED=$(({effective_base} + $JOB_ID * 12345))
+  HIJING_SEED=$(({effective_base} + $JOB_ID * 54321))
+  ZPC_SEED=$(({effective_base} + $JOB_ID * 98765))
+else
+  # Scatter (batch_num, job_id) into [0, 2^31-2] via integer hash; multipliers chosen so sum fits in 32-bit for thousands of jobs
+  BASE=$(( ({batch_num} * 1000003 + $JOB_ID * 100003) % 2147483647 ))
+  PYTHIA_SEED=$((BASE + 1))
+  HIJING_SEED=$(( (BASE + 100000007) % 2147483647 + 1 ))
+  ZPC_SEED=$(( (BASE + 200000007) % 2147483647 + 1 ))
+fi
+
 # Generate the pythia parton
 cd pythia_parton
-./mymain06 {nevent} $(({random_base_seed} + $JOB_ID * 12345))
+./mymain06 {nevent} $PYTHIA_SEED
 cd ../
 
 # ZPC for parton cascade
 cd ZPC
 mkdir -p ana
 ln -sf ../pythia_parton/parton_info.dat ./
-
-# Generate job-specific seeds for ZPC
-HIJING_SEED=$(({random_base_seed} + $JOB_ID * 54321))
-ZPC_SEED=$(({random_base_seed} + $JOB_ID * 98765))
 
 # Create custom input.ampt with job-specific seeds and event number
 sed "s/^0[[:space:]]*![[:space:]]*ihjsed/11      ! ihjsed/" input.ampt | \\
@@ -171,7 +187,7 @@ rm -r ZPC
 cd ../
 rm -rf job-batch{batch_num}-$JOB_ID
 cd ../
-'''.format(nevent=nevent, random_base_seed=random_base_seed, batch_num=batch_num, tarball_name=tarball_name, output_path_arg=output_path_arg)
+'''.format(nevent=nevent, seed_mode=seed_mode, effective_base=effective_base, batch_num=batch_num, tarball_name=tarball_name, output_path_arg=output_path_arg)
 
     job_name = f"NSC3_batch{batch_num}.sh"
     with open(job_name, 'w') as fout:
@@ -225,6 +241,9 @@ if __name__=='__main__':
                     help="Output directory for root files (created if missing)")
     ap.add_argument("--output-prefix", "-p", type=str, default=DEFAULT_OUTPUT_PREFIX,
                     help="Output file name prefix (files: <prefix>_batch<N>_<jobid>.root)")
+    ap.add_argument("--seed-mode", "-s", type=int, choices=[1, 2], default=1,
+                    help="1: random base + job_id (different seeds each submission); "
+                         "2: deterministic(batch_number, job_id) — same batch+job => same Pythia partons (for rescattering studies)")
     args = ap.parse_args()
 
     njobs = args.N_jobs
@@ -233,9 +252,11 @@ if __name__=='__main__':
     tarball_name = args.tarball
     output_dir = args.output_dir
     output_prefix = args.output_prefix
+    seed_mode = args.seed_mode
 
     print(f"Submitting batch {batch_num}: {njobs} jobs with {nevent} events each")
     print(f"Tarball: {tarball_name}")
     print(f"Output dir: {output_dir} (created if missing)")
     print(f"Output prefix: {output_prefix}")
-    submit(njobs, nevent, batch_num, output_dir=output_dir, output_prefix=output_prefix, tarball_name=tarball_name)
+    print(f"Seed mode: {seed_mode} ({'random base + job_id' if seed_mode == 1 else 'deterministic(batch, job) — fixed Pythia partons'})")
+    submit(njobs, nevent, batch_num, output_dir=output_dir, output_prefix=output_prefix, tarball_name=tarball_name, seed_mode=seed_mode)

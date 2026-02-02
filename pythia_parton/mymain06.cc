@@ -7,12 +7,12 @@
 #include <sys/stat.h>  // mkdir() function 
 
 #include "Pythia8/Pythia.h"    //....PYTHIA8 headers
-#include "fastjet/ClusterSequence.hh"
-#include "fastjet/Selector.hh" 
+// #include "fastjet/ClusterSequence.hh"
+// #include "fastjet/Selector.hh" 
 
 using namespace Pythia8;
 using namespace std;
-using namespace fastjet;
+// using namespace fastjet;
 
 #define pi 3.1415926
 
@@ -92,22 +92,22 @@ int main(int argv, char* argc[])
     }
     
     // parameter setting
-    const double jet_absetamax = 1.6;
-    const double jet_ptmin = 450.0;
+    // const double jet_absetamax = 1.6;
+    // const double jet_ptmin = 450.0;
     
     //fastjet setting
     // create a jet definition: 
     // a jet algorithm with a given radius parameter
-    double R = 0.8;
-    fastjet::JetDefinition jet_def(fastjet::antikt_algorithm, R);
+    // double R = 0.8;
+    // fastjet::JetDefinition jet_def(fastjet::antikt_algorithm, R);
 
    // select jet
-    fastjet::Selector jet_selector = fastjet::SelectorAbsEtaMax( jet_absetamax ) && fastjet::SelectorPtMin( jet_ptmin );
+    // fastjet::Selector jet_selector = fastjet::SelectorAbsEtaMax( jet_absetamax ) && fastjet::SelectorPtMin( jet_ptmin );
     
     // selection for final particles which are used to reconstruct jet
-    double absetamax = R+jet_absetamax;
-    double particle_ptmin = 0.3;
-    fastjet::Selector particle_selector = fastjet::SelectorAbsEtaMax(absetamax) && fastjet::SelectorPtMin( particle_ptmin );
+    // double absetamax = R+jet_absetamax;
+    // double particle_ptmin = 0.3;
+    // fastjet::Selector particle_selector = fastjet::SelectorAbsEtaMax(absetamax) && fastjet::SelectorPtMin( particle_ptmin );
     
     // Number of events to generate
     int numEvent = 0;
@@ -115,7 +115,7 @@ int main(int argv, char* argc[])
     // Loop over events
     for (int iEvent = 0; ; ++iEvent) {
         if (!pythia.next()) continue;
-        vector<fastjet::PseudoJet> input_particles;  // No longer needed without jet reconstruction
+        // vector<fastjet::PseudoJet> input_particles;  // No longer needed without jet reconstruction
         // Access the event record
         Event& event = pythia.event;
         int Nparton = 0;
@@ -127,34 +127,27 @@ int main(int argv, char* argc[])
             //    (fabs(particle.id()) == 1 || fabs(particle.id()) == 2 ||  fabs(particle.id()) == 3 || particle.id() == 21)) {
             if (particle.isFinal() && particle.isParton()) {
                 Nparton++;
-                fastjet::PseudoJet particlefastjet = PseudoJet(particle.px(), particle.py(), particle.pz(), particle.e());
-                particlefastjet.set_user_index(particle.id());
-                input_particles.push_back(particlefastjet);
+                // fastjet::PseudoJet particlefastjet = PseudoJet(particle.px(), particle.py(), particle.pz(), particle.e());
+                // particlefastjet.set_user_index(particle.id());
+                // input_particles.push_back(particlefastjet);
             }
         }
-        input_particles = particle_selector(input_particles);
+        // input_particles = particle_selector(input_particles);
         // run the jet clustering with the above jet definition
         //----------------------------------------------------------
-        fastjet::ClusterSequence clust_seq(input_particles, jet_def);
+        // fastjet::ClusterSequence clust_seq(input_particles, jet_def);
 
         // get the resulting jets ordered in pt
         //----------------------------------------------------------
-        vector<fastjet::PseudoJet> inclusive_jets = sorted_by_pt( jet_selector(clust_seq.inclusive_jets()) );
-
-        if (inclusive_jets.size() == 0 || inclusive_jets[0].pt() < 500.){
-            continue;
-        } else {
-            numEvent +=1;
-            if ( numEvent > totalevent) break;
-        }
+        // vector<fastjet::PseudoJet> inclusive_jets = sorted_by_pt( jet_selector(clust_seq.inclusive_jets()) );
         
         // Apply only parton multiplicity cut: Np > 60
-        /*if (Nparton <= 0) {
+        if (Nparton <= 0) {
             continue;
         }
         
         numEvent +=1;
-        if ( numEvent > totalevent) break;*/
+        if ( numEvent > totalevent) break;
         
         output_parton << "# event id " << numEvent  <<  ", Number_of_parton  "  << std::endl;
         output_parton << Nparton << std::endl;
@@ -217,7 +210,7 @@ int main(int argv, char* argc[])
                                 }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
@@ -264,7 +257,7 @@ int main(int argv, char* argc[])
                                 }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
@@ -301,7 +294,7 @@ int main(int argv, char* argc[])
 			        }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
@@ -346,7 +339,7 @@ int main(int argv, char* argc[])
 			        }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
@@ -383,7 +376,7 @@ int main(int argv, char* argc[])
 			        }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
@@ -424,7 +417,7 @@ int main(int argv, char* argc[])
 			        }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
@@ -459,7 +452,7 @@ int main(int argv, char* argc[])
 			        }
                             } else {
                                 if(kt_daughter > 0.0001) {
-                                    time_step = 1/p4[0];
+                                    time_step = 1/p4[0]*0.197;
                                     timeplus = timeplus + time_step;
                                     position[0] = position[0] + time_step * p4[1]/p4[0];
                                     position[1] = position[1] + time_step * p4[2]/p4[0];
