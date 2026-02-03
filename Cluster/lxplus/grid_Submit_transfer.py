@@ -37,6 +37,9 @@ def ensure_tarball(eos_src=EOS_SRC_DIR, tarball=DEFAULT_TARBALL):
 def submit(njobs=1, nevent=10, batch_num=0, output_dir=None, output_prefix=None, tarball_name=DEFAULT_TARBALL, seed_mode=1):
     # batch_num: typically 0-10 (tens of batches). JOB_ID in the job script is Condor $(Process), i.e. 0 to njobs-1.
     # seed_mode: 1 = random base + JOB_ID (different each submission); 2 = deterministic(batch_num, JOB_ID) for fixed Pythia partons across rescattering scenarios
+    # label for script/log names: tarball_name (without extension) + _batch_ + batch_num (e.g. event0_0mb.tgz, batch 0 -> event0_0mb_batch_0)
+    tarball_base = os.path.splitext(tarball_name)[0]
+    label_safe = f"{tarball_base}_batch_{batch_num}".replace("/", "_").replace(" ", "_")
     # Make sure logs/ exists
     if not os.path.exists('logs'):
         os.makedirs('logs')
@@ -84,22 +87,22 @@ echo $_CONDOR_SCRATCH_DIR
 mkdir -p Playground
 
 # Remove existing job directory if it exists
-if [ -d "Playground/job-batch{batch_num}-$JOB_ID" ]; then
-    echo "Removing existing job-batch{batch_num}-$JOB_ID directory..."
-    rm -rf "Playground/job-batch{batch_num}-$JOB_ID"
+if [ -d "Playground/job-{label}-$JOB_ID" ]; then
+    echo "Removing existing job-{label}-$JOB_ID directory..."
+    rm -rf "Playground/job-{label}-$JOB_ID"
 fi
 
 # Prepare job work area
-mkdir -p "Playground/job-batch{batch_num}-$JOB_ID"
+mkdir -p "Playground/job-{label}-$JOB_ID"
 
 # Unpack shipped code (tarball) into the job directory
 if [ ! -f "{tarball_name}" ]; then
     echo "FATAL: missing {tarball_name} in working dir"; ls -la; exit 99
 fi
 
-tar -xzf {tarball_name} -C "Playground/job-batch{batch_num}-$JOB_ID"
+tar -xzf {tarball_name} -C "Playground/job-{label}-$JOB_ID"
 
-cd "Playground/job-batch{batch_num}-$JOB_ID"
+cd "Playground/job-{label}-$JOB_ID"
 
 # If the tar contains a top-level 'event0' folder, flatten it
 if [ -d event0 ]; then
@@ -185,11 +188,11 @@ rm -r hadronization_urqmd
 rm -r pythia_parton
 rm -r ZPC
 cd ../
-rm -rf job-batch{batch_num}-$JOB_ID
+rm -rf job-{label}-$JOB_ID
 cd ../
-'''.format(nevent=nevent, seed_mode=seed_mode, effective_base=effective_base, batch_num=batch_num, tarball_name=tarball_name, output_path_arg=output_path_arg)
+'''.format(nevent=nevent, seed_mode=seed_mode, effective_base=effective_base, batch_num=batch_num, label=label_safe, tarball_name=tarball_name, output_path_arg=output_path_arg)
 
-    job_name = f"NSC3_batch{batch_num}.sh"
+    job_name = f"NSC3_{label_safe}.sh"
     with open(job_name, 'w') as fout:
         fout.write(jobs)
     os.chmod(job_name, 0o755)
@@ -207,16 +210,16 @@ transfer_input_files    = {tarball_name}
          environment = "PYTHIA8=/afs/cern.ch/user/x/xiaoyul/pythia8310_install; LHAPDF_DATA_PATH=/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/share/LHAPDF; LD_LIBRARY_PATH=/afs/cern.ch/user/x/xiaoyul/pythia8310_install/lib:/afs/cern.ch/user/x/xiaoyul/LHAPDF_Lib/lib:$$LD_LIBRARY_PATH; TERM=dumb"
 
 # Logs stay on the submit host (AFS)
-output                  = logs/out_batch{batch_num}_$(Process).log
-error                   = logs/err_batch{batch_num}_$(Process).log
-log                     = logs/condor_batch{batch_num}.log
+output                  = logs/out_{label}_$(Process).log
+error                   = logs/err_{label}_$(Process).log
+log                     = logs/condor_{label}.log
 
 +MaxRuntime             = 100000
 request_memory          = 8192
 request_disk            = 10485760 
 queue {njobs}
-'''.format(job_name=job_name, tarball_name=tarball_name, batch_num=batch_num, njobs=njobs)
-    job_name2 = f"Submit_batch{batch_num}.sh"
+'''.format(job_name=job_name, tarball_name=tarball_name, label=label_safe, njobs=njobs)
+    job_name2 = f"Submit_{label_safe}.sh"
     with open(job_name2, 'w') as fout:
         fout.write(condor_submit)
 

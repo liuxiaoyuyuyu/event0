@@ -100,6 +100,8 @@ mkdir logs
 python3 grid_Submit_transfer.py N_jobs events_per_job batch_number [--tarball TARBALL] [--output-dir DIR] [--output-prefix PREFIX] [--seed-mode MODE]
 ```
 
+- **Script and log names:** Derived from tarball name and batch number (third parameter): `tarball_base_batch_N` (e.g. `event0_0mb.tgz` and batch 0 → `NSC3_event0_0mb_batch_0.sh`, `Submit_event0_0mb_batch_0.sh`, `logs/out_event0_0mb_batch_0_$(Process).log`). Different tarballs or batch numbers give different names, so you can submit different settings at the same time without overwriting.
+
 - **Seed mode** (`-s` / `--seed-mode`): `1` = random base + job id (default); `2` = deterministic hash(batch_number, job_id) so same batch+job gives the same seed; seeds are scattered (not sequential) to avoid RNG correlations.
 
 **How seeds are set (per job):**  
@@ -120,13 +122,9 @@ Each job gets a **job id** = 0, 1, …, N_jobs−1 (Condor `$(Process)`).
 
 **Usage example:**
 ```bash
-#2000 job with 0.1M events per job, batch 0;
-#-t set the tarball name;
-#-d set the output file path (create the directory if it doesn't exist);
-#-p set the output file prefix; 
-#-s set the random seed mode.
-
-python3 grid_Submit_transfer.py 2000 100000 0 -t event0_0mb.tgz -d /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/wenbin_cuts/0mb/batch0 -p pp_parton_cascade_0mb -s 2 
+# 2000 jobs, 0.1M events/job, batch 0; -t tarball; -d output dir; -p output prefix; -s seed mode. Script/log names: event0_0mb_batch_0 (from tarball + batch number).
+python3 grid_Submit_transfer.py 2000 100000 0 -t event0_0mb.tgz -d /eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample/wenbin_cuts/0mb/batch0 -p pp_parton_cascade_0mb -s 2
+# Different tarball (e.g. event0_3mb.tgz) or batch number gives different script/log names, so you can run multiple settings at once.
 ```
 `python3 grid_Submit_transfer.py --help` for full options.
 
