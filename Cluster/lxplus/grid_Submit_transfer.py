@@ -9,7 +9,7 @@ import time
 import os
 import argparse
 
-EOS_SRC_DIR = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/event0"  # directory on EOS to ship
+EOS_SRC_DIR = "/afs/cern.ch/user/x/xiaoyul/MYDEMOANALYZER/Wenbin/event0"  # directory on EOS to ship
 DEFAULT_TARBALL = "event0.tgz"
 DEFAULT_OUTPUT_DIR = "/eos/cms/store/group/phys_heavyions/xiaoyul/wenbin/sample"
 DEFAULT_OUTPUT_PREFIX = "pp_parton_cascade"
