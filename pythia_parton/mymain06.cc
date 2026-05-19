@@ -485,9 +485,9 @@ int main(int argv, char* argc[])
                 
                 //set the formation time to 0.0 and positions to 0.0 for the partons
                 timeplus = 0.0;
-                position[0] = 0.0;
-                position[1] = 0.0;
-                position[2] = 0.0;
+                //position[0] = 0.0;
+                //position[1] = 0.0;
+                //position[2] = 0.0;
                 
                 output_parton << pdgId << "  " 
                               << px << "  " << py << "  " << pz << "  " << energy <<"  "

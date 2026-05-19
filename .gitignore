@@ -1,0 +1,22 @@
+# Compiled objects and libraries
+*.o
+*.a
+*.so
+
+# Simulation and analysis output
+*.dat
+!hadronization_urqmd/urqmd_code/urqmd/tables.dat
+!**/chosen_particles.dat
+
+# Built executables (ZPC, etc.)
+**/exec
+*.e
+
+# Logs and batch output
+nohup.out
+*.log
+
+# Editor and OS files
+.DS_Store
+*~
+*.swp
