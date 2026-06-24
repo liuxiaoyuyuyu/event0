@@ -63,6 +63,7 @@ git clone git@github.com:liuxiaoyuyuyu/event0.git
 
     Note: use the accumulant method, set the spatial mode to 0!
 - Partonic cross section: `/event0/ZPC/input.ampt`, line 23
+    - 0.8 ($\sigma_p=24$ mb)
     - 2.265d0 ($\sigma_p=3$ mb);
     - 3.2032d0 ($\sigma_p=1.5$ mb); 
     - 1d4 ($\sigma_p=0$ mb)
